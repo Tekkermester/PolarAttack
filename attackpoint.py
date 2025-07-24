@@ -249,8 +249,13 @@ class GetShoes(QThread):
         for row in rows:
             td = row.find_all('td')
             shoes_on_ap.append(td[1].get_text(strip=True))
-
-
+        #compare shoe lists
+        shoes_sports = load_yml(Path.home() / "Library" / "Application Support" / "PolarAttack" / "shoes_sports.yml")
+        shoes = shoes_sports['shoes']
+        new = list(set(shoes_on_ap)-set(shoes))
+        old = list(set(shoes)-set(shoes_on_ap))
+        #return
+        return new, old
 
 
 class GetSpotrs(QThread):
