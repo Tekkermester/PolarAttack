@@ -7,7 +7,7 @@ import selenium.common
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QEventLoop
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
-from utils import load_yml, time_split
+from utils import load_yml, time_split, resource_path
 
 from bs4 import BeautifulSoup
 
@@ -70,11 +70,6 @@ class Uploading(QThread):
 
 
     def upload_to_attackpoint(self):
-
-        def resource_path(relative_path):
-            base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-            return os.path.join(base_path, relative_path)
-
         chrome_binary = resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium")
         driver_path = resource_path("chromedriver")
         options = Options()
@@ -211,11 +206,6 @@ class GetShoes(QThread):
         self.password = self.config['ap_passw']
 
     def run(self):
-
-        def resource_path(relative_path):
-            base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-            return os.path.join(base_path, relative_path)
-
         chrome_binary = resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium")
         driver_path = resource_path("chromedriver")
         options = Options()
@@ -259,9 +249,54 @@ class GetShoes(QThread):
 
 
 class GetSpotrs(QThread):
-    def run(self):
-        pass
+    def __init__(self):
+        super().__init__()
+        self.driver = None
+        self.config = load_yml(f"{Path.home()}/Library/Application Support/PolarAttack/config.yml")
+        self.ap_username = self.config['ap_username']
+        self.password = self.config['ap_passw']
 
+    def run(self):
+        chrome_binary = resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium")
+        driver_path = resource_path("chromedriver")
+        options = Options()
+        options.binary_location = chrome_binary
+        #options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        service = Service(driver_path)
+        self.driver = webdriver.Chrome(service=service, options=options)
+        #login to attackpoint
+        self.driver.get("https://attackpoint.org/login.jsp")
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.NAME, 'username')))
+        username = self.driver.find_element(By.NAME, 'username')
+        username.clear()
+        username.send_keys(self.ap_username)
+        passw = self.driver.find_element(By.NAME, 'password')
+        passw.clear()
+        passw.send_keys(self.password + Keys.ENTER)
+        #navigate to activity types settings
+        self.driver.find_element(By.XPATH, '//a[@href=\"/usermenu.jsp\" and text()=\"Settings\"]').click()
+        self.driver.find_element(By.XPATH, '//a[@href=\"/editactivitytypes.jsp\"]').click()
+        #bs4
+        html = self.driver.page_source
+        soup = BeautifulSoup(html, 'html.parser')
+
+        table = soup.find('tbody')
+        rows = table.find_all('tr')[1:]
+
+        activitys_on_ap = []
+        for row in rows:
+            td = row.find_all('td')
+            data = td[2].find('input').get('value')
+            activitys_on_ap.append(data)
+        shoes_sports = load_yml(Path.home() / "Library" / "Application Support" / "PolarAttack" / "shoes_sports.yml")
+        sports = shoes_sports["sports"]
+        new = list(set(activitys_on_ap) - set(sports))
+        old = list(set(sports) - set(activitys_on_ap))
+        #
+        return new, old
 
 a = GetShoes()
 a.run()
