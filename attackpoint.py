@@ -245,6 +245,7 @@ class GetShoes(QThread):
         new = list(set(shoes_on_ap)-set(shoes))
         old = list(set(shoes)-set(shoes_on_ap))
         #return
+        self.driver.quit()
         return new, old
 
 
@@ -296,6 +297,7 @@ class GetSpotrs(QThread):
         new = list(set(activitys_on_ap) - set(sports))
         old = list(set(sports) - set(activitys_on_ap))
         #
+        self.driver.quit()
         return new, old
 
 a = GetShoes()
