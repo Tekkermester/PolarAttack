@@ -243,6 +243,14 @@ class GetShoes(QThread):
         html = self.driver.page_source
         soup = BeautifulSoup(html, "html.parser")
 
+        table = soup.find('table')
+        rows = table.find_all('tr')[1:]
+        shoes_on_ap = []
+        for row in rows:
+            td = row.find_all('td')
+            shoes_on_ap.append(td[1].get_text(strip=True))
+
+
 
 
 class GetSpotrs(QThread):
@@ -250,3 +258,5 @@ class GetSpotrs(QThread):
         pass
 
 
+a = GetShoes()
+a.run()
