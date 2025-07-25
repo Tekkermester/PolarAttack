@@ -3,7 +3,7 @@ import os
 import time
 
 
-def load_yml(filename):
+def load_yml(filename:str):
     with open(filename) as f:
         return yaml.full_load(f)
 
@@ -13,10 +13,10 @@ def delete_caches(filepath: str):
         if file.split("-")[0] != time.strftime("%Y.%m.%d"):
             os.remove(f"{filepath}/{file}")
 
-def open_folder(path):
+def open_folder(path: str):
     os.system(f'open {path}')
 
-def http_respons(status_code):
+def http_respons(status_code: int) -> str:
     match status_code:
         case s if 200 <= s < 300:
             return f"Siker ({s})."
@@ -108,7 +108,7 @@ def calc_altitude(alt_data:list)-> str:
     return str(int(ascent))
 
 
-def time_split(time_:str):
+def time_split(time_:str) -> List[str]:
     s = time_.split("T")
     date = s[0].split("-")
     year = date[0]
