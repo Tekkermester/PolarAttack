@@ -1,8 +1,7 @@
 import time
 from datetime import date, timedelta
 from fileinput import filename
-
-
+from string import whitespace
 
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
 
@@ -430,12 +429,12 @@ class UiMainWindow(QWidget):
         #--------
         ######### check for shoes and sprots if new
         self.get_shoes_worker = GetShoes()
+        self.get_shoes_worker.ready.connect(self.get_shoes_finished)
         self.get_shoes_worker.start()
-        self.get_shoes_worker.finished.connect(self.get_shoes_finished)
 
         self.get_sports_worker = GetSpotrs()
+        self.get_sports_worker.ready.connect(self.get_sports_finished)
         self.get_sports_worker.start()
-        self.get_sports_worker.finished.connect(self.get_sports_finished)
 
 
 
@@ -444,10 +443,26 @@ class UiMainWindow(QWidget):
 
         return 0
 
-    def get_shoes_finished(self):
-        pass
-    def get_sports_finished(self):
-        pass
+    def get_shoes_finished(self, new, old):
+        if new:
+            pass
+        else:
+            pass
+        if old:
+            pass
+        else:
+            pass
+
+
+    def get_sports_finished(self, new, old):
+        if new:
+            pass
+        else:
+            pass
+        if old:
+            pass
+        else:
+            pass
 
     def load_trainings(self):
         flow_instance = Flow()

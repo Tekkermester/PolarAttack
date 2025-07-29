@@ -198,6 +198,7 @@ class Uploading(QThread):
 
 
 class GetShoes(QThread):
+    ready = pyqtSignal(list, list)
     def __init__(self):
         super().__init__()
         self.driver = None
@@ -246,10 +247,11 @@ class GetShoes(QThread):
         old = list(set(shoes)-set(shoes_on_ap))
         #return
         self.driver.quit()
-        return new, old
+        self.ready.emit(new, old)
 
 
 class GetSpotrs(QThread):
+    ready = pyqtSignal(list, list)
     def __init__(self):
         super().__init__()
         self.driver = None
@@ -298,7 +300,7 @@ class GetSpotrs(QThread):
         old = list(set(sports) - set(activitys_on_ap))
         #
         self.driver.quit()
-        return new, old
+        self.ready.emit(new, old)
 
 a = GetShoes()
 a.run()
