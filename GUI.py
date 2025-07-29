@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QUrl, Qt, QSize, pyqtSignal, QTimer, QObject,QRunnable,pyqtSlot, QPoint, QDate
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, QAction, \
     QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, QDateEdit, \
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget
 from PyQt5.QtGui import QGuiApplication, QFont, QIcon
 import sys
 import json
@@ -443,24 +443,36 @@ class UiMainWindow(QWidget):
 
         return 0
 
-    def get_shoes_finished(self, new, old):
+    def get_shoes_finished(self, new: list, old: list):
         if new:
-            pass
+            window = NewShoeOrSport("shoes", 'new', new)
+            window.show()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
         if old:
-            pass
+            window = NewShoeOrSport("shoes", 'old', old)
+            window.show()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
 
 
     def get_sports_finished(self, new, old):
         if new:
-            pass
+            window = NewShoeOrSport("sports", 'new', new)
+            window.exec_()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
         if old:
-            pass
+            window = NewShoeOrSport("sports", 'old', old)
+            window.exec_()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
 
@@ -1436,7 +1448,29 @@ class DiscomfortWidget(QWidget):
         """)
 
 class NewShoeOrSport(QDialog):
-    pass
+    def __init__(self, type_:str, no:str, data:list):
+        super().__init__()
+        self.type = type_
+        self.no = no
+        self.data = data
+        self.setupUi()
+
+    def setupUi(self):
+        self.setWindowTitle(f"Manage {self.type}")
+        self.setModal(False)
+        self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint)
+        self.resize(400, 400)
+        #center
+        frame = self.frameGeometry()
+        center = QDesktopWidget().availableGeometry().center()
+        frame.moveCenter(center)
+        self.move(frame.topLeft())
+
+
+        if self.type == "shoes":
+            pass
+        else:
+            self.setModal(True) # can't itneract with other winodws
 
 
 # if __name__ == "__main__":
@@ -1445,3 +1479,8 @@ class NewShoeOrSport(QDialog):
 #     window.resize(500, 600)
 #     window.show()
 #     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    app = QApplication([])
+    dialog =NewShoeOrSport("shoes", "new", [])
+    dialog.exec_()

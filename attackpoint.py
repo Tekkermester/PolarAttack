@@ -301,6 +301,3 @@ class GetSpotrs(QThread):
         #
         self.driver.quit()
         self.ready.emit(new, old)
-
-a = GetShoes()
-a.run()

@@ -1,6 +1,7 @@
 import yaml
 import os
 import time
+import sys
 
 
 def load_yml(filename:str):
@@ -108,7 +109,7 @@ def calc_altitude(alt_data:list)-> str:
     return str(int(ascent))
 
 
-def time_split(time_:str) -> List[str]:
+def time_split(time_:str) -> list[str]:
     s = time_.split("T")
     date = s[0].split("-")
     year = date[0]
