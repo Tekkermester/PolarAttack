@@ -1,12 +1,20 @@
 import yaml
 import os
 import time
+import sys
+from pathlib import Path
 
+APP_DIR = f"{Path.home()}/Library/Application Support/PolarAttack/"
+CACHE_DIR = f"{Path.home()}/Library/Caches/PolarAttack/"
+LOG_DIR = f"{Path.home()}/Library/Logs/PolarAttack/"
 
 def load_yml(filename:str):
     with open(filename) as f:
         return yaml.full_load(f)
 
+def dump_yaml(filename:str, data: any):
+    with open(filename, "w") as file:
+        yaml.dump(data, file)
 
 def delete_caches(filepath: str):
     for file in os.listdir(filepath):
@@ -108,7 +116,7 @@ def calc_altitude(alt_data:list)-> str:
     return str(int(ascent))
 
 
-def time_split(time_:str) -> List[str]:
+def time_split(time_:str) -> list[str]:
     s = time_.split("T")
     date = s[0].split("-")
     year = date[0]

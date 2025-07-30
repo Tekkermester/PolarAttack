@@ -5,7 +5,7 @@ from string import whitespace
 
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
 
-
+from shoe_sport import Shoes, Sports
 from utils import *
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QUrl, Qt, QSize, pyqtSignal, QTimer, QObject,QRunnable,pyqtSlot, QPoint, QDate
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, QAction, \
     QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, QDateEdit, \
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget
 from PyQt5.QtGui import QGuiApplication, QFont, QIcon
 import sys
 import json
@@ -443,24 +443,36 @@ class UiMainWindow(QWidget):
 
         return 0
 
-    def get_shoes_finished(self, new, old):
-        if new:
-            pass
+    def get_shoes_finished(self, new: list, old: list):
+        if len(new) != 0:
+            window = NewShoeOrSport("shoes", 'new', new)
+            window.exec_()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
         if old:
-            pass
+            window = NewShoeOrSport("shoes", 'old', old)
+            window.exec_()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
 
 
-    def get_sports_finished(self, new, old):
+    def get_sports_finished(self, new:list, old:list):
         if new:
-            pass
+            window = NewShoeOrSport("sports", 'new', new)
+            window.exec_()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
         if old:
-            pass
+            window = NewShoeOrSport("sports", 'old', old)
+            window.exec_()
+            window.raise_()
+            window.activateWindow()
         else:
             pass
 
@@ -1436,12 +1448,240 @@ class DiscomfortWidget(QWidget):
         """)
 
 class NewShoeOrSport(QDialog):
-    pass
+    def __init__(self, type_:str, no:str, data:list):
+        super().__init__()
+        self.type = type_
+        self.no = no
+        self.data = data
+        self.setupUi()
+
+    def setupUi(self):
+        self.setWindowTitle(f"Manage {self.type}")
+        self.setModal(False)
+        self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint)
+        self.resize(400, 400)
+        self.setFixedSize(400, 400)
+        self.setModal(True)  # can't itneract with other winodws
+        #stylesheet
+        self.setStyleSheet("""
+                QMainWindow, QWidget {
+                    background-color: rgb(24,24,24);
+                    color: white;
+                    font-family: Arial;
+                }
+                QGroupBox {
+                    background-color: rgb(30,30,30);
+                    border: 2px solid rgb(77,77,77);
+                    border-radius: 10px;
+                    color: white;
+                    font-weight: 700;
+                }
+                QLabel {
+                    color: white;
+                    font-size: 14px;
+                }
+                QComboBox, QLineEdit {
+                    background-color: rgb(50, 50, 50);
+                    color: white;
+                    border: 1px solid rgb(77, 77, 77);
+                    border-radius: 5px;
+                    padding: 5px;
+                    font-size: 14px;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: rgb(50, 50, 50);
+                    color: white;
+                    selection-background-color: orange;
+                    selection-color: black;
+                    border: none;
+                }
+                QTextEdit {
+                    background-color: rgb(77, 77, 77);
+                    color: white;
+                    border: 1px solid rgb(50, 50, 50);
+                    border-radius: 5px;
+                    padding: 5px;
+                    font-size: 14px;
+                }
+                QCheckBox {
+                    color: white;
+                    font-size: 14px;
+                }
+                QCheckBox::indicator {
+                    width: 16px;
+                    height: 16px;
+                }
+                QCheckBox::indicator:unchecked {
+                    border: 2px solid rgb(77, 77, 77);
+                    background-color: rgb(50, 50, 50);
+                    border-radius: 3px;
+                }
+                QCheckBox::indicator:checked {
+                    border: 2px solid orange;
+                    background-color: orange;
+                    border-radius: 3px;
+                }
+                QPushButton {
+                    background-color: rgb(214, 143, 36);
+                    color: white;
+                    font-weight: bold;
+                    font-size: 17px;
+                    border: none;
+                    border-radius: 9px;
+                    padding: 4px 18px;
+                }
+                QPushButton:hover {
+                    background-color: #FF8C00;
+                }
+                QPushButton:pressed {
+                    background-color: #E67300;
+                }
+                QComboBox QAbstractItemView QScrollBar:vertical {
+                    background: #444;
+                    width: 12px;
+                    margin: 0px 0px 0px 0px;
+                }
+                QComboBox QAbstractItemView QScrollBar::handle:vertical {
+                    background: orange;
+                    min-height: 20px;
+                    border-radius: 6px;
+                }
+                QComboBox QAbstractItemView QScrollBar::add-line:vertical,
+                QComboBox QAbstractItemView QScrollBar::sub-line:vertical {
+                    background: none;
+                    height: 0px;
+                }
+                QComboBox QAbstractItemView QScrollBar::up-arrow:vertical,
+                QComboBox QAbstractItemView QScrollBar::down-arrow:vertical {
+                    background: none;
+                }
+            """)
+        #center
+        frame = self.frameGeometry()
+        center = QDesktopWidget().availableGeometry().center()
+        frame.moveCenter(center)
+        self.move(frame.topLeft())
+        #main layout
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.title_label = QLabel()
+        self.title_label.setAlignment(Qt.AlignTop)
+        self.title_label.setStyleSheet("font-size: 24px;white-space: pre-line;")
+        self.title_label.setWordWrap(True)
+        self.title_label.setMinimumWidth(300)
+        #layouts
+        self.title_layout = QHBoxLayout()
+        self. main_layout = QHBoxLayout()
+        self.button_layout = QHBoxLayout()
+        self.button_layout.setAlignment(Qt.AlignBottom)
+        self.layout.addLayout(self.title_layout)
+        self.layout.addLayout(self.main_layout)
+        self.layout.addLayout(self.button_layout)
+
+        self.title_layout.addWidget(self.title_label)
+
+        #buttons
+        self.cancel_btn = QPushButton()
+        self.cancel_btn.setStyleSheet("""
+                                       QPushButton {
+                                            background-color: #53575e;
+                                            color: white;
+                                            font-weight: bold;
+                                            font-size: 15px;
+                                            border: none;
+                                            border-radius: 9px;
+                                            padding: 4px 18px;
+                                        }
+                                        QPushButton:hover {
+                                            background-color: #777c85;
+                                        }
+                                        QPushButton:pressed {
+                                            background-color: #bcc4d1;
+                                        }
+                                        """)
+        self.cancel_btn.clicked.connect(self.cancel_clicked)
+
+        self.ok_btn = QPushButton()
+        self.button_layout.addWidget(self.cancel_btn)
+        self.button_layout.addWidget(self.ok_btn)
+
+        self.image_label = QLabel()
+        self.list_groupbox = QGroupBox()
+        self.group_layout = QVBoxLayout()
+
+        #######
+        if self.type == "shoes":
+            self.image = QPixmap("ui/icons/shoe.png").scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.image_label.setPixmap(self.image)
+            self.main_layout.addWidget(self.image_label)
+
+            self.main_layout.addWidget(self.list_groupbox)
+            #button connect
+            self.ok_btn.clicked.connect(self.manage_shoes)
+
+            if self.no == "new":
+                self.title_label.setText(f"{len(self.data)} új cipő található az <span style='color:orange;'>Attack</span>pointon!")
 
 
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = InjuryWindow(2024,'May','04')
-#     window.resize(500, 600)
-#     window.show()
-#     sys.exit(app.exec_())
+                for shoe in self.data:
+                    shoe_label = QLabel(f"{shoe}")
+                    shoe_label.setStyleSheet("background-color:None; font-weight: 700;color: orange")
+                    self.group_layout.addWidget(shoe_label)
+                self.list_groupbox.setLayout(self.group_layout)
+                self.cancel_btn.setText("Nem adom hozzá")
+                self.ok_btn.setText("Hozzáadom")
+
+            else: #old
+                self.title_label.setText(f"{len(self.data)} cipőt eltávolítottak az <span style='color:orange;'>Attack</span>pointról!<br>Itt is eltávolítod?")
+                for shoe in self.data:
+                    shoe_label = QLabel(f"{shoe}")
+                    shoe_label.setStyleSheet("background-color:None; font-weight: 700;color: red")
+                    self.group_layout.addWidget(shoe_label)
+                self.list_groupbox.setLayout(self.group_layout)
+                self.cancel_btn.setText("Meghagyom")
+                self.ok_btn.setText("Eltávolítom")
+
+
+        #######
+        else:
+            self.image = QPixmap("ui/icons/running.png").scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.image_label.setPixmap(self.image)
+            self.main_layout.addWidget(self.image_label)
+
+            self.main_layout.addWidget(self.list_groupbox)
+            # button connect
+            self.ok_btn.clicked.connect(self.manage_sports)
+
+            if self.no == "new":
+                self.title_label.setText(f"{len(self.data)} új sport  található az <span style='color:orange;'>Attack</span>pointon!")
+                for sport in self.data:
+                    sport_label = QLabel(f"{sport}")
+                    sport_label.setStyleSheet("background-color:None; font-weight: 700;color: orange")
+                    self.group_layout.addWidget(sport_label)
+                self.list_groupbox.setLayout(self.group_layout)
+                self.cancel_btn.setText("Nem adom hozzá")
+                self.ok_btn.setText("Hozzáadom")
+            else:
+                self.title_label.setText(f"{len(self.data)} sportot eltávolítottak az <span style='color:orange;'>Attack</span>pointról!<br>Itt is eltávolítod?")
+                for sport in self.data:
+                    sport_label = QLabel(f"{sport}")
+                    sport_label.setStyleSheet("background-color:None; font-weight: 700;color: red")
+                    self.group_layout.addWidget(sport_label)
+                self.list_groupbox.setLayout(self.group_layout)
+                self.cancel_btn.setText("Meghagyom")
+                self.ok_btn.setText("Eltávolítom")
+
+
+
+
+    def cancel_clicked(self):
+        self.close()
+    def manage_shoes(self):
+        self.close()
+        self.manage_shoes = Shoes(self.no, self.data)
+        self.manage_shoes.start()
+    def manage_sports(self):
+        self.manage_sports = Sports(self.no, self.data)
+        self.manage_sports.start()
+        self.close()
