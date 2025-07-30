@@ -74,7 +74,7 @@ class Uploading(QThread):
         driver_path = resource_path("chromedriver")
         options = Options()
         options.binary_location = chrome_binary
-        #options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
