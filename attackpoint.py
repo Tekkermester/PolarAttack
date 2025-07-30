@@ -211,7 +211,7 @@ class GetShoes(QThread):
         driver_path = resource_path("chromedriver")
         options = Options()
         options.binary_location = chrome_binary
-        #options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
@@ -227,6 +227,7 @@ class GetShoes(QThread):
         passw.clear()
         passw.send_keys(self.password + Keys.ENTER)
         #navigate to shoes
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
         shoes_btn = self.driver.find_element(By.XPATH, "//a[text()=\'shoes\']")
         shoes_btn.click()
         WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[@href=\'/editshoes.jsp\' and text()=\'add a new pair\']")))
@@ -243,8 +244,8 @@ class GetShoes(QThread):
         #compare shoe lists
         shoes_sports = load_yml(Path.home() / "Library" / "Application Support" / "PolarAttack" / "shoes_sports.yml")
         shoes = shoes_sports['shoes']
-        new = list(set(shoes_on_ap)-set(shoes))
-        old = list(set(shoes)-set(shoes_on_ap))
+        new = list(set(shoes_on_ap) - set(shoes))
+        old = list(set(shoes) - set(shoes_on_ap))
         #return
         self.driver.quit()
         self.ready.emit(new, old)
@@ -264,7 +265,7 @@ class GetSpotrs(QThread):
         driver_path = resource_path("chromedriver")
         options = Options()
         options.binary_location = chrome_binary
-        #options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
@@ -280,19 +281,21 @@ class GetSpotrs(QThread):
         passw.clear()
         passw.send_keys(self.password + Keys.ENTER)
         #navigate to activity types settings
-        self.driver.find_element(By.XPATH, '//a[@href=\"/usermenu.jsp\" and text()=\"Settings\"]').click()
+        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
+        self.driver.find_element(By.XPATH, "//a[text()='Settings']").click()
         self.driver.find_element(By.XPATH, '//a[@href=\"/editactivitytypes.jsp\"]').click()
         #bs4
         html = self.driver.page_source
         soup = BeautifulSoup(html, 'html.parser')
 
         table = soup.find('tbody')
-        rows = table.find_all('tr')[1:]
+        rows = table.find_all('tr')[1:-2]
 
         activitys_on_ap = []
         for row in rows:
             td = row.find_all('td')
-            data = td[2].find('input').get('value')
+            td_2 = td[1].find('input')
+            data = td_2.get('value')
             activitys_on_ap.append(data)
         shoes_sports = load_yml(Path.home() / "Library" / "Application Support" / "PolarAttack" / "shoes_sports.yml")
         sports = shoes_sports["sports"]

@@ -444,23 +444,23 @@ class UiMainWindow(QWidget):
         return 0
 
     def get_shoes_finished(self, new: list, old: list):
-        if new:
+        if len(new) != 0:
             window = NewShoeOrSport("shoes", 'new', new)
-            window.show()
+            window.exec_()
             window.raise_()
             window.activateWindow()
         else:
             pass
         if old:
             window = NewShoeOrSport("shoes", 'old', old)
-            window.show()
+            window.exec_()
             window.raise_()
             window.activateWindow()
         else:
             pass
 
 
-    def get_sports_finished(self, new, old):
+    def get_sports_finished(self, new:list, old:list):
         if new:
             window = NewShoeOrSport("sports", 'new', new)
             window.exec_()
@@ -1461,6 +1461,7 @@ class NewShoeOrSport(QDialog):
         self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint)
         self.resize(400, 400)
         self.setFixedSize(400, 400)
+        self.setModal(True)  # can't itneract with other winodws
         #stylesheet
         self.setStyleSheet("""
                 QMainWindow, QWidget {
@@ -1644,7 +1645,6 @@ class NewShoeOrSport(QDialog):
 
         #######
         else:
-            self.setModal(True) # can't itneract with other winodws
             self.image = QPixmap("ui/icons/running.png").scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.image_label.setPixmap(self.image)
             self.main_layout.addWidget(self.image_label)
@@ -1678,22 +1678,10 @@ class NewShoeOrSport(QDialog):
     def cancel_clicked(self):
         self.close()
     def manage_shoes(self):
-        manage_shoes = Shoes(self.no, self.data)
-        manage_shoes.start()
         self.close()
+        self.manage_shoes = Shoes(self.no, self.data)
+        self.manage_shoes.start()
     def manage_sports(self):
-        manage_sports = Sports(self.no, self.data)
-        manage_sports.start()
+        self.manage_sports = Sports(self.no, self.data)
+        self.manage_sports.start()
         self.close()
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = InjuryWindow(2024,'May','04')
-#     window.resize(500, 600)
-#     window.show()
-#     sys.exit(app.exec_())
-
-if __name__ == "__main__":
-    app = QApplication([])
-    dialog =NewShoeOrSport("sports", "new", ['foci', 'futás'])
-    dialog.exec_()
