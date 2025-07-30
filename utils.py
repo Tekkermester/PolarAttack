@@ -8,6 +8,9 @@ def load_yml(filename:str):
     with open(filename) as f:
         return yaml.full_load(f)
 
+def dump_yaml(filename:str, data: any):
+    with open(filename, "w") as file:
+        yaml.dump(data, file)
 
 def delete_caches(filepath: str):
     for file in os.listdir(filepath):
