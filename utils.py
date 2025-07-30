@@ -2,7 +2,11 @@ import yaml
 import os
 import time
 import sys
+from pathlib import Path
 
+APP_DIR = f"{Path.home()}/Library/Application Support/PolarAttack/"
+CACHE_DIR = f"{Path.home()}/Library/Caches/PolarAttack/"
+LOG_DIR = f"{Path.home()}/Library/Logs/PolarAttack/"
 
 def load_yml(filename:str):
     with open(filename) as f:

@@ -5,7 +5,7 @@ from string import whitespace
 
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
 
-
+from shoe_sport import Shoes, Sports
 from utils import *
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
@@ -1617,7 +1617,7 @@ class NewShoeOrSport(QDialog):
 
             self.main_layout.addWidget(self.list_groupbox)
             #button connect
-            self.ok_btn.clicked.connect(lambda checked, x=self.no: self.manage_shoes(x))
+            self.ok_btn.clicked.connect(self.manage_shoes)
 
             if self.no == "new":
                 self.title_label.setText(f"{len(self.data)} új cipő található az <span style='color:orange;'>Attack</span>pointon!")
@@ -1651,7 +1651,7 @@ class NewShoeOrSport(QDialog):
 
             self.main_layout.addWidget(self.list_groupbox)
             # button connect
-            self.ok_btn.clicked.connect(lambda checked, x=self.no: self.manage_sports(x))
+            self.ok_btn.clicked.connect(self.manage_sports)
 
             if self.no == "new":
                 self.title_label.setText(f"{len(self.data)} új sport  található az <span style='color:orange;'>Attack</span>pointon!")
@@ -1677,10 +1677,14 @@ class NewShoeOrSport(QDialog):
 
     def cancel_clicked(self):
         self.close()
-    def manage_shoes(self, no):
-        pass
-    def manage_sports(self, no):
-        pass
+    def manage_shoes(self):
+        manage_shoes = Shoes(self.no, self.data)
+        manage_shoes.start()
+        self.close()
+    def manage_sports(self):
+        manage_sports = Sports(self.no, self.data)
+        manage_sports.start()
+        self.close()
 
 # if __name__ == "__main__":
 #     app = QApplication(sys.argv)
@@ -1691,5 +1695,5 @@ class NewShoeOrSport(QDialog):
 
 if __name__ == "__main__":
     app = QApplication([])
-    dialog =NewShoeOrSport("sports", "old", ['foci', 'futás'])
+    dialog =NewShoeOrSport("sports", "new", ['foci', 'futás'])
     dialog.exec_()
