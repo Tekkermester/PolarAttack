@@ -1,4 +1,5 @@
 import time
+from asyncio.sslproto import AppProtocolState
 from datetime import date, timedelta
 from fileinput import filename
 from string import whitespace
@@ -610,7 +611,18 @@ class UiMainWindow(QWidget):
 
         year, month, day, hour = time_split(workout['start_time'])
         n_month = months[int(month)]
-        activity_type = "futas" #-----------
+
+        sport = workout['detailed_sport_info'] #-----------
+        sports_dict = load_yml(f"{APP_DIR}shoes_sports.yml")['sport_dict']
+        try:
+            if sports_dict[sport] != None:
+                activity_type = sports_dict[sport]
+            else:
+                activity_type = load_yml(f"{APP_DIR}shoes_sports.yml")['sports'][0]
+        except:
+            activity_type = load_yml(f"{APP_DIR}shoes_sports.yml")['sports'][0]
+
+
         intensity = "3"
         total_time = ap_calc_duration(workout['duration'])
         distance = calc_distance(workout['distance'])
@@ -661,7 +673,9 @@ class UiMainWindow(QWidget):
         labelActivity = QLabel("Activity / Sport")
         self.comboBoxActivity = QComboBox()
         self.comboBoxActivity.setEditable(True)
-        self.comboBoxActivity.addItems(["futás", "Running", "Cycling", "Swimming"])
+        sports = [sport for sport in load_yml(f"{APP_DIR}shoes_sports.yml")['sports']]
+
+        self.comboBoxActivity.addItems(sports)
 
         labelWorkout = QLabel("Workout:")
         self.comboBoxWorkout = QComboBox()
@@ -753,7 +767,9 @@ class UiMainWindow(QWidget):
         self.comboBoxShoes = QComboBox()
         self.comboBoxShoes.setEditable(True)
         self.comboBoxShoes.setMinimumWidth(150)
+        shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}shoes_sports.yml")['shoes']]
         self.comboBoxShoes.addItems(["Not Specified"])
+        self.comboBoxShoes.addItems(shoes_)
 
         horizontalLayout_Shoes.addWidget(labelShoes)
         horizontalLayout_Shoes.addWidget(self.comboBoxShoes)
@@ -883,7 +899,7 @@ class UiMainWindow(QWidget):
                 background-color: #E67300;
             }
         ''')
-        self.pushButtonSubmitBottom.clicked.connect(lambda: self.start_upload(activity_type))
+        self.pushButtonSubmitBottom.clicked.connect(self.start_upload)
         horizontalLayout_BottomSubmit.addWidget(self.pushButtonSubmitBottom)
 
         self.right_layout.addLayout(horizontalLayout_BottomSubmit)
@@ -923,7 +939,7 @@ class UiMainWindow(QWidget):
 
         # uploadddd
 
-    def start_upload(self, task):
+    def start_upload(self):
         # Create a worker instance
         self.worker = Uploading(self.comboBoxYear.currentText(),self.comboBoxMonth.currentText(),self.comboBoxDay.currentText(),self.comboBoxSession.currentText(),self.comboBoxActivity.currentText(),self.comboBoxWorkout.currentText(),self.comboBoxIntensity.currentText(), self.lineEditActivitySubType.text(),self.lineEditTotalTime.text(),self.lineEditDistance.text(),self.comboBoxUnits.currentText(),self.lineEditClimb.text(),self.comboBoxShoes.currentText(),self.lineEditAvgHR.text(),self.lineEditMaxHR.text(), self.lineEditRestingHR.text(),self.lineEditSleep.text(),self.lineEditWeight.text(), self.textEditDescription.toPlainText(),self.checkBoxInjured.checkState(), self.checkBoxSick.checkState(), self.checkBoxRest.checkState(), {})
         # Connect the finished signal to a callback
@@ -933,8 +949,7 @@ class UiMainWindow(QWidget):
         self.worker.start()
 
     def finished(self):
-        # Handle the result of the background task
-        print(f"yaaay")
+        pass
     def show_injury_window(self, year, month, day):
         self.injury_window = InjuryWindow(year, month, day, self .worker)
         self.injury_window.show()
