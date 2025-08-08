@@ -585,7 +585,6 @@ class UiMainWindow(QWidget):
         self.refresh.setText("Refreshing...")
         self.load_trainings()
         self.refresh.setText("")
-        print('das')
 
 
     def uploader(self, workout_data:str):
