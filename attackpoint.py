@@ -74,7 +74,7 @@ class Uploading(QThread):
         driver_path = resource_path("chromedriver")
         options = Options()
         options.binary_location = chrome_binary
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
@@ -159,10 +159,11 @@ class Uploading(QThread):
 
         #wait until done I think
         #WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//h2[text()=\'Training\']")))
-        self.driver.quit()
+       # self.driver.quit()
         return "Siker"
 
     def injury_upload(self, data):
+        print(self.driver.page_source)
 
         y = self.driver.find_element(By.ID, 'startdate-year')
         y.send_keys(Keys.COMMAND + "a")
