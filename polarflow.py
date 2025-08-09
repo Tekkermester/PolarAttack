@@ -22,7 +22,7 @@ class Flow:
         try:
             self.accestoken = load_yml(f"{self.SUPPORT_DIR}/tokens.yml")['accestoken']
         except FileNotFoundError:
-            self.accestoken = " "
+            self.accestoken = ""
 
     def get_trainings(self):
         try:
