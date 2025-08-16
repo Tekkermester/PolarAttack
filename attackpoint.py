@@ -151,8 +151,13 @@ class Uploading(QThread):
                 WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.ID, "injurytypeid")))
                 self.show_injury_window.emit(self.year, self.month, self.day)
                 self.wait_loop.exec_()
-
-            except:
+                # After event loop, handle injury data in THIS thread
+                if hasattr(self, "injury_data") and self.injury_data:
+                    if not self.injury_data.get("no", False):
+                        self.injury_upload(self.injury_data)
+                    else:
+                        self.injury_no_thanks()
+            except Exception:
                 pass
         else:
             submit_click()
