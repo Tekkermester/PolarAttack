@@ -38,10 +38,15 @@ class Sports(QThread):
             if self.no == "new":
                 for sport in self.data:
                     sp_yaml['sports'].append(sport)
+
+
                 dump_yaml(self.filename, sp_yaml)
+
             else:
                 for sport in self.data:
                     sp_yaml['sports'].remove(sport)
+
+
                 dump_yaml(self.filename, sp_yaml)
         except Exception as e:
             with open(f"{LOG_DIR}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:

@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets,Qt
 from PyQt5.QtCore import QUrl, Qt, QSize, pyqtSignal, QTimer, QObject,QRunnable,pyqtSlot, QPoint, QDate
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, QAction, \
     QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, QDateEdit, \
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget, QCompleter
 from PyQt5.QtGui import QGuiApplication, QFont, QIcon
 import sys
 import json
@@ -1002,7 +1002,7 @@ class LoadingWindow(QWidget):
 
 
 class InjuryWindow(QMainWindow):
-    def __init__(self, year, month, day, uploading_worker):
+    def __init__(self, year:str, month:str, day:str, uploading_worker:any):
         super().__init__()
         self.year = year
         self.month = month
@@ -1467,14 +1467,15 @@ class NewShoeOrSport(QDialog):
         self.type = type_
         self.no = no
         self.data = data
+        self.sport_yaml = load_yml(f"{APP_DIR}/shoes_sports.yml")
+        #nothig after :)
         self.setupUi()
 
     def setupUi(self):
         self.setWindowTitle(f"Manage {self.type}")
         self.setModal(False)
         self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint)
-        self.resize(400, 400)
-        self.setFixedSize(400, 400)
+        self.setFixedSize(450, 500)
         self.setModal(True)  # can't itneract with other winodws
         #stylesheet
         self.setStyleSheet("""
@@ -1584,14 +1585,14 @@ class NewShoeOrSport(QDialog):
         self.title_label.setStyleSheet("font-size: 24px;white-space: pre-line;")
         self.title_label.setWordWrap(True)
         self.title_label.setMinimumWidth(300)
+
+
         #layouts
         self.title_layout = QHBoxLayout()
-        self. main_layout = QHBoxLayout()
+        self.main_layout = QHBoxLayout()
         self.button_layout = QHBoxLayout()
         self.button_layout.setAlignment(Qt.AlignBottom)
         self.layout.addLayout(self.title_layout)
-        self.layout.addLayout(self.main_layout)
-        self.layout.addLayout(self.button_layout)
 
         self.title_layout.addWidget(self.title_label)
 
@@ -1624,8 +1625,10 @@ class NewShoeOrSport(QDialog):
         self.list_groupbox = QGroupBox()
         self.group_layout = QVBoxLayout()
 
-        #######
+        ####### shoes #######
         if self.type == "shoes":
+            self.layout.addLayout(self.main_layout)
+            self.layout.addLayout(self.button_layout)
             self.image = QPixmap("ui/icons/shoe.png").scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.image_label.setPixmap(self.image)
             self.main_layout.addWidget(self.image_label)
@@ -1657,11 +1660,19 @@ class NewShoeOrSport(QDialog):
                 self.ok_btn.setText("Eltávolítom")
 
 
-        #######
+        ####### sports ######
         else:
-            self.image = QPixmap("ui/icons/running.png").scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.main_layout = QVBoxLayout()
+            self.layout.addLayout(self.main_layout)
+            self.layout.addLayout(self.button_layout)
+            self.description_label = QLabel("Az új sport mellet keresd ki a sport (angol) megfelelőjét a Polar FLow-ról!")
+            self.description_label.setWordWrap(True)
+            self.description_label.setFont(QFont('Arial', 16,QFont.Bold))
+            self.main_layout.addWidget(self.description_label)
+
+            self.image = QPixmap("ui/icons/running.png").scaled(110, 110, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.image_label.setPixmap(self.image)
-            self.main_layout.addWidget(self.image_label)
+            self.title_layout.addWidget(self.image_label)
 
             self.main_layout.addWidget(self.list_groupbox)
             # button connect
@@ -1670,14 +1681,71 @@ class NewShoeOrSport(QDialog):
             if self.no == "new":
                 self.title_label.setText(f"{len(self.data)} új sport  található az <span style='color:orange;'>Attack</span>pointon!")
                 for sport in self.data:
+                    sport_widget = QWidget()
+                    sport_layout = QHBoxLayout()
+                    sport_widget.setLayout(sport_layout)
+
                     sport_label = QLabel(f"{sport}")
                     sport_label.setStyleSheet("background-color:None; font-weight: 700;color: orange")
-                    self.group_layout.addWidget(sport_label)
+
+                    sport_itmes = [sport for sport in self.sport_yaml['sport_dict'].keys()
+                                   if self.sport_yaml['sport_dict'][sport] is  None]
+
+                    assign_combo  = QComboBox()#for chossing to assign auto
+                    assign_combo.setObjectName('assign_combo')
+                    assign_combo.setEditable(True)
+                    assign_combo.setStyleSheet('''#assign_combo::down-arrow {
+                                                    image: url('ui/icons/down.png');
+                                                    min-width: 60px;
+                                                    width: 20px;
+                                                    height: 20px;
+                                                }
+                                                #assign_combo::drop-down {
+                                                    background-color: orange;
+                                                    border: none;
+                                                    width: 40px;  /* Make drop-down wider */
+                                                    min-width: 40px;
+                                                    border-top-right-radius: 5px;
+                                                    border-bottom-right-radius: 5px;
+                                                }
+                                                ''')
+                    assign_combo.lineEdit().setPlaceholderText("Kezdje el írni vagy válassz a menüből...")
+                    assign_combo.addItems(sport_itmes)
+                    assign_combo.setCurrentIndex(-1)
+
+                    completer = QCompleter(sport_itmes, assign_combo) # to autocomplate the search
+                    completer.setCaseSensitivity(False)
+                    completer.setFilterMode(Qt.MatchContains)
+                    completer.popup().setStyleSheet(''' QComboBox QAbstractItemView, QAbstractItemView {
+                                    background-color: rgb(50, 50, 50);
+                                    color: white;
+                                    selection-background-color: orange;
+                                    selection-color: black;
+                                    border: none;
+                                    font-size: 14px;
+                                }
+                                QScrollBar:vertical {
+                                    background: #444;
+                                    width: 12px;
+                                    margin: 0px 0px 0px 0px;
+                                }
+                                QScrollBar::handle:vertical {
+                                    background: orange;
+                                    min-height: 20px;
+                                    border-radius: 6px;
+                                }''')
+                    assign_combo.setCompleter(completer)
+
+                    sport_layout.addWidget(sport_label)
+                    sport_layout.addWidget(assign_combo)
+
+                    self.group_layout.addWidget(sport_widget)
                 self.list_groupbox.setLayout(self.group_layout)
                 self.cancel_btn.setText("Nem adom hozzá")
                 self.ok_btn.setText("Hozzáadom")
             else:
-                self.title_label.setText(f"{len(self.data)} sportot eltávolítottak az <span style='color:orange;'>Attack</span>pointról!<br>Itt is eltávolítod?")
+                self.title_label.setText(f"{len(self.data)} sportot eltávolítottak az "
+                                         f"<span style='color:orange;'>Attack</span>pointról!<br>Itt is eltávolítod?")
                 for sport in self.data:
                     sport_label = QLabel(f"{sport}")
                     sport_label.setStyleSheet("background-color:None; font-weight: 700;color: red")
@@ -1699,3 +1767,12 @@ class NewShoeOrSport(QDialog):
         self.manage_sports = Sports(self.no, self.data)
         self.manage_sports.start()
         self.close()
+
+
+
+#just for testing :)
+if __name__ == "__main__":
+    app = QApplication([])
+    injury_dialog = NewShoeOrSport("sports", "new",['rögbi', 'tollas', 'fallabda'])
+    injury_dialog.exec_()
+
