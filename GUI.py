@@ -1778,8 +1778,8 @@ class NewShoeOrSport(QDialog):
 
 
 #just for testing :)
-if __name__ == "__main__":
-    app = QApplication([])
-    injury_dialog = NewShoeOrSport("sports", "new",['tollas'])
-    injury_dialog.exec_()
+# if __name__ == "__main__":
+#     app = QApplication([])
+#     injury_dialog = NewShoeOrSport("sports", "new",['tollas'])
+#     injury_dialog.exec_()
 
