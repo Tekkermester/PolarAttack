@@ -1470,6 +1470,7 @@ class NewShoeOrSport(QDialog):
         self.sport_yaml = load_yml(f"{APP_DIR}/shoes_sports.yml")
         #nothig after :)
         self.setupUi()
+        self.assign_dict = {}
 
     def setupUi(self):
         self.setWindowTitle(f"Manage {self.type}")
@@ -1713,6 +1714,8 @@ class NewShoeOrSport(QDialog):
                     assign_combo.addItems(sport_itmes)
                     assign_combo.setCurrentIndex(-1)
 
+                    assign_combo.currentTextChanged.connect(lambda value, s=sport:self.assign_combo_changed(value, s))
+
                     completer = QCompleter(sport_itmes, assign_combo) # to autocomplate the search
                     completer.setCaseSensitivity(False)
                     completer.setFilterMode(Qt.MatchContains)
@@ -1743,6 +1746,7 @@ class NewShoeOrSport(QDialog):
                 self.list_groupbox.setLayout(self.group_layout)
                 self.cancel_btn.setText("Nem adom hozzá")
                 self.ok_btn.setText("Hozzáadom")
+                ##remove
             else:
                 self.title_label.setText(f"{len(self.data)} sportot eltávolítottak az "
                                          f"<span style='color:orange;'>Attack</span>pointról!<br>Itt is eltávolítod?")
@@ -1750,12 +1754,15 @@ class NewShoeOrSport(QDialog):
                     sport_label = QLabel(f"{sport}")
                     sport_label.setStyleSheet("background-color:None; font-weight: 700;color: red")
                     self.group_layout.addWidget(sport_label)
+                self.assign_dict = self.data
                 self.list_groupbox.setLayout(self.group_layout)
                 self.cancel_btn.setText("Meghagyom")
                 self.ok_btn.setText("Eltávolítom")
 
 
 
+    def assign_combo_changed(self, value, sport):
+        self.assign_dict[sport] = value
 
     def cancel_clicked(self):
         self.close()
@@ -1764,7 +1771,7 @@ class NewShoeOrSport(QDialog):
         self.manage_shoes = Shoes(self.no, self.data)
         self.manage_shoes.start()
     def manage_sports(self):
-        self.manage_sports = Sports(self.no, self.data)
+        self.manage_sports = Sports(self.no, self.assign_dict)
         self.manage_sports.start()
         self.close()
 
@@ -1773,6 +1780,6 @@ class NewShoeOrSport(QDialog):
 #just for testing :)
 if __name__ == "__main__":
     app = QApplication([])
-    injury_dialog = NewShoeOrSport("sports", "new",['rögbi', 'tollas', 'fallabda'])
+    injury_dialog = NewShoeOrSport("sports", "new",['tollas'])
     injury_dialog.exec_()
 
