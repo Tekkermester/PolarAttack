@@ -26,7 +26,7 @@ class Shoes(QThread):
 
 
 class Sports(QThread):
-    def __init__(self, no,data:list, parent=None):
+    def __init__(self, no, data:list | dict, parent=None):
         super().__init__(parent)
         self.no = no
         self.data = data
@@ -36,12 +36,19 @@ class Sports(QThread):
             sp_yaml = load_yml(self.filename)
 
             if self.no == "new":
-                for sport in self.data:
+                for sport, polar_sport  in self.data.items():
                     sp_yaml['sports'].append(sport)
+                    sp_yaml['sport_dict'][polar_sport] = sport
+
+
+
                 dump_yaml(self.filename, sp_yaml)
+
             else:
                 for sport in self.data:
                     sp_yaml['sports'].remove(sport)
+
+
                 dump_yaml(self.filename, sp_yaml)
         except Exception as e:
             with open(f"{LOG_DIR}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
