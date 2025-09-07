@@ -47,6 +47,7 @@ class Sports(QThread):
             else:
                 for sport in self.data:
                     sp_yaml['sports'].remove(sport)
+                   #delete connection
 
 
                 dump_yaml(self.filename, sp_yaml)
