@@ -1,18 +1,18 @@
 import json
 import requests
 import time
-from pathlib import Path
 import os
 from utils import load_yml
+from paths import APP_DIR, LOG_DIR, CACHE_DIR
 
 class Flow:
     def __init__(self):
         self.APP_NAME = "PolarAttack"
         self.home_dir = Path.home()
 
-        self.SUPPORT_DIR = self.home_dir / "Library" / "Application Support" / self.APP_NAME
-        self.CACHE_DIR = self.home_dir / "Library" / "Caches" / self.APP_NAME
-        self.LOG_DIR = f"{self.home_dir}/Library/Logs/{self.APP_NAME}"
+        self.SUPPORT_DIR = APP_DIR
+        self.CACHE_DIR = CACHE_DIR
+        self.LOG_DIR = LOG_DIR
 
         #if folder doesn't exist
         os.makedirs(self.SUPPORT_DIR, exist_ok=True)

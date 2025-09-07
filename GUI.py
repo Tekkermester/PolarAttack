@@ -1,13 +1,12 @@
 import time
-from asyncio.sslproto import AppProtocolState
 from datetime import date, timedelta
-from fileinput import filename
-from string import whitespace
+
 
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
 
 from shoe_sport import Shoes, Sports
 from utils import *
+from paths import APP_DIR
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -966,7 +965,7 @@ class UiMainWindow(QWidget):
         self.attckp.setText(_translate("MainWindow", "Attackpoint"))
         self.polarflow.setText(_translate("MainWindow", "PolarFlow"))
         self.name.setText(_translate(f"MainWindow",
-                                     f"<html><head/><body><p><span style=\" font-weight:700; color:white;\">{load_yml(f"{Path.home()}/Library/Application Support/PolarAttack/config.yml")['name']}</span></p></body></html>"))
+                                     f"<html><head/><body><p><span style=\" font-weight:700; color:white;\">{load_yml(f"{APP_DIR}/config.yml")['name']}</span></p></body></html>"))
 
 
 

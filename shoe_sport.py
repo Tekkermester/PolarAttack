@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QThread, pyqtSignal
-from utils import load_yml, dump_yaml, APP_DIR, LOG_DIR
+from utils import load_yml, dump_yaml
+from paths import APP_DIR, LOG_DIR
 import time
 
 class Shoes(QThread):
