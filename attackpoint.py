@@ -1,7 +1,7 @@
 import os
 import sys
 import time
-from pathlib import Path
+
 
 import selenium.common
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QEventLoop

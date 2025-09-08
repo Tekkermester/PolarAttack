@@ -1,0 +1,7 @@
+PyQt5
+appdirs
+PyYAML
+requests
+selenium
+bs4
+beautifulsoup4
