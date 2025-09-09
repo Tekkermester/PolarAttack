@@ -8,7 +8,6 @@ from paths import APP_DIR, LOG_DIR, CACHE_DIR
 class Flow:
     def __init__(self):
         self.APP_NAME = "PolarAttack"
-        self.home_dir = Path.home()
 
         self.SUPPORT_DIR = APP_DIR
         self.CACHE_DIR = CACHE_DIR

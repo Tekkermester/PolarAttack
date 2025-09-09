@@ -6,8 +6,11 @@ import sys
 
 
 def load_yml(filename:str):
-    with open(filename) as f:
-        return yaml.full_load(f)
+    try:
+        with open(filename) as f:
+            return yaml.full_load(f)
+    except FileNotFoundError:
+        print("Problem")  #reurn blank yaml sson...
 
 def dump_yaml(filename:str, data: object):
     with open(filename, "w") as file:
