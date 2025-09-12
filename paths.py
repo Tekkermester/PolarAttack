@@ -12,4 +12,10 @@ def chromium_path():
     if platform.system() == "Darwin": #MacOS
         return resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium"), resource_path("chromedriver")
     else:
-        return resource_path("chromium_win/chrome.exe"), resource_path("chromedriver.exe") #windows version
+        return resource_path("chromium_win\\chrome.exe"), resource_path("chromedriver.exe") #windows version
+
+def sep()-> str:
+    if platform.system() == "Darwin":
+        return '/'
+    else:
+        return '\\'

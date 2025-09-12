@@ -6,7 +6,7 @@ from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
 
 from shoe_sport import Shoes, Sports
 from utils import *
-from paths import APP_DIR
+from paths import APP_DIR, sep
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -612,14 +612,14 @@ class UiMainWindow(QWidget):
         n_month = months[int(month)]
 
         sport = workout['detailed_sport_info'] #-----------
-        sports_dict = load_yml(f"{APP_DIR}shoes_sports.yml")['sport_dict']
+        sports_dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sport_dict']
         try:
             if sports_dict[sport] != None:
                 activity_type = sports_dict[sport]
             else:
-                activity_type = load_yml(f"{APP_DIR}shoes_sports.yml")['sports'][0]
+                activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
         except:
-            activity_type = load_yml(f"{APP_DIR}shoes_sports.yml")['sports'][0]
+            activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
 
 
         intensity = "3"
@@ -672,7 +672,7 @@ class UiMainWindow(QWidget):
         labelActivity = QLabel("Activity / Sport")
         self.comboBoxActivity = QComboBox()
         self.comboBoxActivity.setEditable(True)
-        sports = [sport for sport in load_yml(f"{APP_DIR}shoes_sports.yml")['sports']]
+        sports = [sport for sport in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports']]
 
         self.comboBoxActivity.addItems(sports)
 
@@ -766,7 +766,7 @@ class UiMainWindow(QWidget):
         self.comboBoxShoes = QComboBox()
         self.comboBoxShoes.setEditable(True)
         self.comboBoxShoes.setMinimumWidth(150)
-        shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}shoes_sports.yml")['shoes']]
+        shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['shoes']]
         self.comboBoxShoes.addItems(["Not Specified"])
         self.comboBoxShoes.addItems(shoes_)
 
@@ -965,7 +965,7 @@ class UiMainWindow(QWidget):
         self.attckp.setText(_translate("MainWindow", "Attackpoint"))
         self.polarflow.setText(_translate("MainWindow", "PolarFlow"))
         self.name.setText(_translate(f"MainWindow",
-                                     f"<html><head/><body><p><span style=\" font-weight:700; color:white;\">{load_yml(f"{APP_DIR}/config.yml")['name']}</span></p></body></html>"))
+                                     f"<html><head/><body><p><span style=\" font-weight:700; color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
 
 
 
@@ -1466,7 +1466,7 @@ class NewShoeOrSport(QDialog):
         self.type = type_
         self.no = no
         self.data = data
-        self.sport_yaml = load_yml(f"{APP_DIR}/shoes_sports.yml")
+        self.sport_yaml = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
         #nothig after :)
         self.setupUi()
         self.assign_dict = {}

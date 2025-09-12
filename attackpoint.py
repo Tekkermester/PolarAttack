@@ -8,7 +8,7 @@ from PyQt5.QtCore import QThread, pyqtSignal, Qt, QEventLoop
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from utils import load_yml, time_split
-from paths import APP_DIR, chromium_path
+from paths import APP_DIR, chromium_path, sep
 
 from bs4 import BeautifulSoup
 
@@ -57,7 +57,7 @@ class Uploading(QThread):
         self.sick = sick
         self.rest_day = rest_day
         self.injury_data = injury_data
-        self.config = load_yml(f"{APP_DIR}/config.yml")
+        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
@@ -77,6 +77,9 @@ class Uploading(QThread):
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--user-data-dir=" + os.path.join(self.CACHE_DIR, "chrome_profile"))
+        options.add_argument("--disk-cache-dir=" + os.path.join(self.CACHE_DIR, "chrome_cache"))
+
 
         service = Service(driver_path)
         self.driver = webdriver.Chrome(service=service, options=options)
@@ -208,7 +211,7 @@ class GetShoes(QThread):
     def __init__(self):
         super().__init__()
         self.driver = None
-        self.config = load_yml(f"{APP_DIR}/config.yml")
+        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
@@ -247,7 +250,7 @@ class GetShoes(QThread):
             td = row.find_all('td')
             shoes_on_ap.append(td[1].get_text(strip=True))
         #compare shoe lists
-        shoes_sports = load_yml(f"{APP_DIR}/shoes_sports.yml")
+        shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
         shoes = shoes_sports['shoes']
         new = list(set(shoes_on_ap) - set(shoes))
         old = list(set(shoes) - set(shoes_on_ap))
@@ -261,7 +264,7 @@ class GetSpotrs(QThread):
     def __init__(self):
         super().__init__()
         self.driver = None
-        self.config = load_yml(f"{APP_DIR}/config.yml")
+        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
@@ -301,7 +304,7 @@ class GetSpotrs(QThread):
             td_2 = td[1].find('input')
             data = td_2.get('value')
             activitys_on_ap.append(data)
-        shoes_sports = load_yml(f"{APP_DIR}/shoes_sports.yml")
+        shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
         sports = shoes_sports["sports"]
         new = list(set(activitys_on_ap) - set(sports))
         old = list(set(sports) - set(activitys_on_ap))

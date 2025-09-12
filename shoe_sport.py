@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from utils import load_yml, dump_yaml
-from paths import APP_DIR, LOG_DIR
+from paths import APP_DIR, LOG_DIR, sep
 import time
 
 class Shoes(QThread):
@@ -8,7 +8,7 @@ class Shoes(QThread):
         super().__init__(parent)
         self.no = no
         self.data = data
-        self.filename = f"{APP_DIR}shoes_sports.yml"
+        self.filename = f"{APP_DIR}{sep()}shoes_sports.yml"
     def run(self):
         try:
             sp_yaml = load_yml(self.filename)
@@ -31,7 +31,7 @@ class Sports(QThread):
         super().__init__(parent)
         self.no = no
         self.data = data
-        self.filename = f"{APP_DIR}shoes_sports.yml"
+        self.filename = f"{APP_DIR}{sep()}shoes_sports.yml"
     def run(self):
         try:
             sp_yaml = load_yml(self.filename)
@@ -53,6 +53,6 @@ class Sports(QThread):
 
                 dump_yaml(self.filename, sp_yaml)
         except Exception as e:
-            with open(f"{LOG_DIR}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
+            with open(f"{LOG_DIR}{sep()}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
                 log.write(str(e))
 
