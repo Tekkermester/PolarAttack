@@ -1,8 +1,10 @@
+from os.path import isfile
+
 import yaml
 import os
 import time
 import sys
-
+import platform
 
 
 def load_yml(filename:str):
@@ -18,8 +20,9 @@ def dump_yaml(filename:str, data: object):
 
 def delete_caches(filepath: str):
     for file in os.listdir(filepath):
-        if file.split("-")[0] != time.strftime("%Y.%m.%d"):
-            os.remove(f"{filepath}/{file}")
+        if file.split("-")[0] != time.strftime("%Y.%m.%d") and isfile(filepath + file):
+            os.remove(filepath + file)
+            os.remove(f"{filepath}{'/' if platform.system() == "Darwin" else '\\'}{file}")
 
 def open_folder(path: str):
     os.system(f'open {path}')
