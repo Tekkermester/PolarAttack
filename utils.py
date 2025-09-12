@@ -18,7 +18,7 @@ def dump_yaml(filename:str, data: object):
 
 def delete_caches(filepath: str):
     for file in os.listdir(filepath):
-        if file.split("-")[0] != time.stime("%Y.%m.%d"):
+        if file.split("-")[0] != time.strftime("%Y.%m.%d"):
             os.remove(f"{filepath}/{file}")
 
 def open_folder(path: str):
