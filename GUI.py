@@ -985,7 +985,7 @@ class UiMainWindow(QWidget):
         self.attckp.setText(_translate("MainWindow", "Attackpoint"))
         self.polarflow.setText(_translate("MainWindow", "PolarFlow"))
         self.name.setText(_translate(f"MainWindow",
-                                     f"<html><head/><body><p><span style=\" font-weight:700; font-family:Segoe UI;color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
+                                     f"<html><head/><body><p><span style=\" font-weight:700; font-family:Arial;color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
 
 
 
