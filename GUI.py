@@ -539,10 +539,10 @@ class UiMainWindow(QWidget):
 
 
                 #labels------
-                workout_label = QLabel(f"<p><b><span style=\"color:white;\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
+                workout_label = QLabel(f"<p><b><span style=\"color:white;font-size: 10pt\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
                                        f"<span style=\"font-weight: 800;color: orange; font-size: 17px\">{calc_duration(ex['duration'])}</span> <span style=\"color:white;\">-</span> "
                                        f"<span style=\"font-size: 18px;color:white;\">{calc_distance(ex['distance'])} km</span> "
-                                       f"<span style=\"color: #a6a49f\">+{calc_altitude(altitudes)}m</span>"
+                                       f"<span style=\"color: #a6a49f; font-size:2em\">+{calc_altitude(altitudes)}m</span>"
                                        f"<span style=\"color:transparent;font-size:2px;\">{ex['id']}<span></p>")
                 item_layout.addWidget(workout_label)
 
