@@ -9,7 +9,7 @@ import platform
 
 def load_yml(filename:str):
     try:
-        with open(filename) as f:
+        with open(filename, encoding='utf-8') as f:
             return yaml.full_load(f)
     except FileNotFoundError:
         print("Problem")  #reurn blank yaml sson...
