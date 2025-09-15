@@ -36,7 +36,20 @@ class UiMainWindow(QWidget):
         #-----------
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1200, 685)
-
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        font.setFamily("Futura")
+        MainWindow.setStyleSheet(f"""
+                QComboBox, QComboBox QAbstractItemView {{
+                    font-size: {font.pointSize()}pt;
+                }},
+                QLineEdit {{
+                    font-size: {font.pointSize()}pt;
+                }},
+                QLabel {{
+                    font-size: {font.pointSize()}pt;
+                }}
+            """)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setStyleSheet('''
@@ -114,7 +127,7 @@ class UiMainWindow(QWidget):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         #attackpoint.org
         self.attckp = QtWidgets.QPushButton(self.top_3)
-        self.attckp.setStyleSheet("background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding: 8px; color:white;")
+        self.attckp.setStyleSheet(f"font-size:{str(font.pointSize())}pt;font-weight:600; background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding: 8px; color:white;")
         self.attckp.clicked.connect(lambda: webbrowser.open('https://attackpoint.org'))
         self.attckp.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
@@ -130,7 +143,7 @@ class UiMainWindow(QWidget):
         self.verticalLayout_2.addWidget(self.attckp)
         #flow.polar.com button
         self.polarflow = QtWidgets.QPushButton(self.top_3)
-        self.polarflow.setStyleSheet("background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding:8px; color:white;")
+        self.polarflow.setStyleSheet(f"font-size:{str(font.pointSize())}pt;font-weight:600; background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding:8px; color:white;")
         self.polarflow.clicked.connect(lambda: webbrowser.open('https://flow.polar.com/diary'))
         self.polarflow.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
@@ -309,7 +322,10 @@ class UiMainWindow(QWidget):
         self.left_layout.addWidget(self.workout_list)
 
         ##
-
+        self.uploader_font = QFont()
+        self.uploader_font.setBold(True)
+        self.uploader_font.setPointSize(13)
+        self.uploader_font.setFamily("Roboto Mono")
         #right side -----
         self.right_groupbox = QGroupBox()
         self.right_groupbox.setObjectName("right")
@@ -322,6 +338,7 @@ class UiMainWindow(QWidget):
                                                     color:white;
                                                     font-family: Arial;
                                                     font-weight: 700;
+                                                    font-size:'''+str(self.uploader_font.pointSize())+'''px;
                                                 }
                                                 QGroupBox#right QComboBox {
                                                     background-color: rgb(50, 50, 50);
@@ -372,6 +389,7 @@ class UiMainWindow(QWidget):
                                                     border: 1px solid rgb(50, 50, 50);
                                                     border-radius: 5px;
                                                     padding: 5px;
+                                                    font-size:'''+str(self.uploader_font.pointSize())+'''pt;
                                                 }
                                                 QGroupBox#right QCheckBox {
                                                     color: white;
@@ -824,7 +842,7 @@ class UiMainWindow(QWidget):
         self.checkBoxRest = QCheckBox()
 
 
-        # Using simple HBoxes for the second row of metrics for alignment
+        #HBoxes for the second row of metrics for alignment
         resting_hr_hbox = QHBoxLayout()
         resting_hr_hbox.addWidget(labelRestingHR)
         resting_hr_hbox.addWidget(self.lineEditRestingHR)
@@ -956,6 +974,7 @@ class UiMainWindow(QWidget):
         self.injury_window.activateWindow()
 
     def upload_finished(self, result):
+        #shoul manage the ui thing
         print(result)
 
     def retranslateUi(self, MainWindow):
@@ -965,7 +984,7 @@ class UiMainWindow(QWidget):
         self.attckp.setText(_translate("MainWindow", "Attackpoint"))
         self.polarflow.setText(_translate("MainWindow", "PolarFlow"))
         self.name.setText(_translate(f"MainWindow",
-                                     f"<html><head/><body><p><span style=\" font-weight:700; color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
+                                     f"<html><head/><body><p><span style=\" font-weight:700; font-family:Segoe UI;color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
 
 
 

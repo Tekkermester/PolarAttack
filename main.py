@@ -1,9 +1,16 @@
 import sys
+import os
+
+from PyQt5.QtGui import QIcon
+
 from GUI import UiMainWindow, LoadingWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 def main():
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon('./ui/icons/window_logo.png'))
 
     # Show the LoadingWindow
     loading_window = QMainWindow()
@@ -18,6 +25,7 @@ def main():
     # Initialize the main window
     main_window = QMainWindow()
     ui = UiMainWindow()
+    #app.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     # Perform the setupUi function
     if ui.setupUi(main_window) == 0:
@@ -30,5 +38,11 @@ def main():
 
     sys.exit(app.exec_())
 
+# Enable high DPI scaling
+#os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+
 if __name__ == "__main__":
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
+
     main()
