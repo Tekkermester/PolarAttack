@@ -269,6 +269,7 @@ class UiMainWindow(QWidget):
         #left side ----
         self.left_groupbox = QGroupBox()
         self.left_groupbox.setObjectName("left")
+        self.left_groupbox.setMinimumWidth(210)
         self.left_groupbox.setStyleSheet(
             "QGroupBox#left{background-color: rgb(24,24,24); border:2px solid; border-radius:10px;}")
         self.left_layout = QVBoxLayout()
