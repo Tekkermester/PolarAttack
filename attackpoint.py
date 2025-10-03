@@ -1,13 +1,14 @@
 import os
 import sys
 import time
-from pathlib import Path
+
 
 import selenium.common
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QEventLoop
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
-from utils import load_yml, time_split, resource_path
+from utils import load_yml, time_split
+from paths import APP_DIR, chromium_path, sep, CACHE_DIR
 
 from bs4 import BeautifulSoup
 
@@ -56,27 +57,34 @@ class Uploading(QThread):
         self.sick = sick
         self.rest_day = rest_day
         self.injury_data = injury_data
-        self.config = load_yml(f"{Path.home()}/Library/Application Support/PolarAttack/config.yml")
+        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
         self.wait_loop = QEventLoop()
 
     def run(self):
+        try:
         # Perform the background task
-        result = self.upload_to_attackpoint()
-        # Emit the result
-        self.finished.emit(result)
-
+            result = self.upload_to_attackpoint()
+            # Emit the result
+            self.finished.emit(result)
+        except Exception as e:
+            import traceback
+            print("Exception in Uploading thread:", e)
+            traceback.print_exc()
+            self.finished.emit("Error")
 
     def upload_to_attackpoint(self):
-        chrome_binary = resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium")
-        driver_path = resource_path("chromedriver")
+        chrome_binary, driver_path = chromium_path()
         options = Options()
         options.binary_location = chrome_binary
-        # options.add_argument("--headless")
+        #options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        #options.add_argument("--user-data-dir=" + os.path.join(CACHE_DIR, "chrome_profile"))
+        #options.add_argument("--disk-cache-dir=" + os.path.join(CACHE_DIR, "chrome_cache"))
+
 
         service = Service(driver_path)
         self.driver = webdriver.Chrome(service=service, options=options)
@@ -164,7 +172,7 @@ class Uploading(QThread):
 
         #wait until done I think
         #WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//h2[text()=\'Training\']")))
-       # self.driver.quit()
+        self.driver.quit()
         return "Siker"
 
     def injury_upload(self, data):
@@ -208,13 +216,12 @@ class GetShoes(QThread):
     def __init__(self):
         super().__init__()
         self.driver = None
-        self.config = load_yml(f"{Path.home()}/Library/Application Support/PolarAttack/config.yml")
+        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
     def run(self):
-        chrome_binary = resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium")
-        driver_path = resource_path("chromedriver")
+        chrome_binary, driver_path = chromium_path()
         options = Options()
         options.binary_location = chrome_binary
         options.add_argument("--headless")
@@ -248,7 +255,7 @@ class GetShoes(QThread):
             td = row.find_all('td')
             shoes_on_ap.append(td[1].get_text(strip=True))
         #compare shoe lists
-        shoes_sports = load_yml(Path.home() / "Library" / "Application Support" / "PolarAttack" / "shoes_sports.yml")
+        shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
         shoes = shoes_sports['shoes']
         new = list(set(shoes_on_ap) - set(shoes))
         old = list(set(shoes) - set(shoes_on_ap))
@@ -262,13 +269,12 @@ class GetSpotrs(QThread):
     def __init__(self):
         super().__init__()
         self.driver = None
-        self.config = load_yml(f"{Path.home()}/Library/Application Support/PolarAttack/config.yml")
+        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
     def run(self):
-        chrome_binary = resource_path("chromium_mac/Chromium.app/Contents/MacOS/Chromium")
-        driver_path = resource_path("chromedriver")
+        chrome_binary, driver_path = chromium_path()
         options = Options()
         options.binary_location = chrome_binary
         options.add_argument("--headless")
@@ -303,7 +309,7 @@ class GetSpotrs(QThread):
             td_2 = td[1].find('input')
             data = td_2.get('value')
             activitys_on_ap.append(data)
-        shoes_sports = load_yml(Path.home() / "Library" / "Application Support" / "PolarAttack" / "shoes_sports.yml")
+        shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
         sports = shoes_sports["sports"]
         new = list(set(activitys_on_ap) - set(sports))
         old = list(set(sports) - set(activitys_on_ap))

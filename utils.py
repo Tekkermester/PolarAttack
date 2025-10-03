@@ -1,25 +1,28 @@
+from os.path import isfile
+
 import yaml
 import os
 import time
 import sys
-from pathlib import Path
+import platform
 
-APP_DIR = f"{Path.home()}/Library/Application Support/PolarAttack/"
-CACHE_DIR = f"{Path.home()}/Library/Caches/PolarAttack/"
-LOG_DIR = f"{Path.home()}/Library/Logs/PolarAttack/"
 
 def load_yml(filename:str):
-    with open(filename) as f:
-        return yaml.full_load(f)
+    try:
+        with open(filename, encoding='utf-8') as f:
+            return yaml.full_load(f)
+    except FileNotFoundError:
+        print("Problem")  #reurn blank yaml sson...
 
-def dump_yaml(filename:str, data: any):
+def dump_yaml(filename:str, data: object):
     with open(filename, "w") as file:
         yaml.dump(data, file)
 
 def delete_caches(filepath: str):
     for file in os.listdir(filepath):
-        if file.split("-")[0] != time.strftime("%Y.%m.%d"):
-            os.remove(f"{filepath}/{file}")
+        if file.split("-")[0] != time.strftime("%Y.%m.%d") and isfile(filepath + file):
+            os.remove(filepath + file)
+            os.remove(f"{filepath}{'/' if platform.system() == "Darwin" else '\\'}{file}")
 
 def open_folder(path: str):
     os.system(f'open {path}')

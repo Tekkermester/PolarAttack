@@ -1,13 +1,12 @@
 import time
-from asyncio.sslproto import AppProtocolState
 from datetime import date, timedelta
-from fileinput import filename
-from string import whitespace
+
 
 from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
 
 from shoe_sport import Shoes, Sports
 from utils import *
+from paths import APP_DIR, sep
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -37,7 +36,20 @@ class UiMainWindow(QWidget):
         #-----------
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1200, 685)
-
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        font.setFamily("Futura")
+        MainWindow.setStyleSheet(f"""
+                QComboBox, QComboBox QAbstractItemView {{
+                    font-size: {font.pointSize()}pt;
+                }},
+                QLineEdit {{
+                    font-size: {font.pointSize()}pt;
+                }},
+                QLabel {{
+                    font-size: {font.pointSize()}pt;
+                }}
+            """)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setStyleSheet('''
@@ -115,7 +127,7 @@ class UiMainWindow(QWidget):
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         #attackpoint.org
         self.attckp = QtWidgets.QPushButton(self.top_3)
-        self.attckp.setStyleSheet("background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding: 8px; color:white;")
+        self.attckp.setStyleSheet(f"font-size:{str(font.pointSize())}pt;font-weight:600; background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding: 8px; color:white;")
         self.attckp.clicked.connect(lambda: webbrowser.open('https://attackpoint.org'))
         self.attckp.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
@@ -131,7 +143,7 @@ class UiMainWindow(QWidget):
         self.verticalLayout_2.addWidget(self.attckp)
         #flow.polar.com button
         self.polarflow = QtWidgets.QPushButton(self.top_3)
-        self.polarflow.setStyleSheet("background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding:8px; color:white;")
+        self.polarflow.setStyleSheet(f"font-size:{str(font.pointSize())}pt;font-weight:600; background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding:8px; color:white;")
         self.polarflow.clicked.connect(lambda: webbrowser.open('https://flow.polar.com/diary'))
         self.polarflow.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
@@ -257,6 +269,7 @@ class UiMainWindow(QWidget):
         #left side ----
         self.left_groupbox = QGroupBox()
         self.left_groupbox.setObjectName("left")
+        self.left_groupbox.setMinimumWidth(210)
         self.left_groupbox.setStyleSheet(
             "QGroupBox#left{background-color: rgb(24,24,24); border:2px solid; border-radius:10px;}")
         self.left_layout = QVBoxLayout()
@@ -310,7 +323,10 @@ class UiMainWindow(QWidget):
         self.left_layout.addWidget(self.workout_list)
 
         ##
-
+        self.uploader_font = QFont()
+        self.uploader_font.setBold(True)
+        self.uploader_font.setPointSize(13)
+        self.uploader_font.setFamily("Roboto Mono")
         #right side -----
         self.right_groupbox = QGroupBox()
         self.right_groupbox.setObjectName("right")
@@ -323,6 +339,7 @@ class UiMainWindow(QWidget):
                                                     color:white;
                                                     font-family: Arial;
                                                     font-weight: 700;
+                                                    font-size:'''+str(self.uploader_font.pointSize())+'''px;
                                                 }
                                                 QGroupBox#right QComboBox {
                                                     background-color: rgb(50, 50, 50);
@@ -373,6 +390,7 @@ class UiMainWindow(QWidget):
                                                     border: 1px solid rgb(50, 50, 50);
                                                     border-radius: 5px;
                                                     padding: 5px;
+                                                    font-size:'''+str(self.uploader_font.pointSize())+'''pt;
                                                 }
                                                 QGroupBox#right QCheckBox {
                                                     color: white;
@@ -521,10 +539,10 @@ class UiMainWindow(QWidget):
 
 
                 #labels------
-                workout_label = QLabel(f"<p><b><span style=\"color:white;\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
+                workout_label = QLabel(f"<p><b><span style=\"color:white;font-size: 10pt\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
                                        f"<span style=\"font-weight: 800;color: orange; font-size: 17px\">{calc_duration(ex['duration'])}</span> <span style=\"color:white;\">-</span> "
                                        f"<span style=\"font-size: 18px;color:white;\">{calc_distance(ex['distance'])} km</span> "
-                                       f"<span style=\"color: #a6a49f\">+{calc_altitude(altitudes)}m</span>"
+                                       f"<span style=\"color: #a6a49f; font-size:2em\">+{calc_altitude(altitudes)}m</span>"
                                        f"<span style=\"color:transparent;font-size:2px;\">{ex['id']}<span></p>")
                 item_layout.addWidget(workout_label)
 
@@ -613,14 +631,14 @@ class UiMainWindow(QWidget):
         n_month = months[int(month)]
 
         sport = workout['detailed_sport_info'] #-----------
-        sports_dict = load_yml(f"{APP_DIR}shoes_sports.yml")['sport_dict']
+        sports_dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sport_dict']
         try:
             if sports_dict[sport] != None:
                 activity_type = sports_dict[sport]
             else:
-                activity_type = load_yml(f"{APP_DIR}shoes_sports.yml")['sports'][0]
+                activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
         except:
-            activity_type = load_yml(f"{APP_DIR}shoes_sports.yml")['sports'][0]
+            activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
 
 
         intensity = "3"
@@ -673,7 +691,7 @@ class UiMainWindow(QWidget):
         labelActivity = QLabel("Activity / Sport")
         self.comboBoxActivity = QComboBox()
         self.comboBoxActivity.setEditable(True)
-        sports = [sport for sport in load_yml(f"{APP_DIR}shoes_sports.yml")['sports']]
+        sports = [sport for sport in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports']]
 
         self.comboBoxActivity.addItems(sports)
 
@@ -767,7 +785,7 @@ class UiMainWindow(QWidget):
         self.comboBoxShoes = QComboBox()
         self.comboBoxShoes.setEditable(True)
         self.comboBoxShoes.setMinimumWidth(150)
-        shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}shoes_sports.yml")['shoes']]
+        shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['shoes']]
         self.comboBoxShoes.addItems(["Not Specified"])
         self.comboBoxShoes.addItems(shoes_)
 
@@ -825,7 +843,7 @@ class UiMainWindow(QWidget):
         self.checkBoxRest = QCheckBox()
 
 
-        # Using simple HBoxes for the second row of metrics for alignment
+        #HBoxes for the second row of metrics for alignment
         resting_hr_hbox = QHBoxLayout()
         resting_hr_hbox.addWidget(labelRestingHR)
         resting_hr_hbox.addWidget(self.lineEditRestingHR)
@@ -957,6 +975,7 @@ class UiMainWindow(QWidget):
         self.injury_window.activateWindow()
 
     def upload_finished(self, result):
+        #shoul manage the ui thing
         print(result)
 
     def retranslateUi(self, MainWindow):
@@ -966,7 +985,7 @@ class UiMainWindow(QWidget):
         self.attckp.setText(_translate("MainWindow", "Attackpoint"))
         self.polarflow.setText(_translate("MainWindow", "PolarFlow"))
         self.name.setText(_translate(f"MainWindow",
-                                     f"<html><head/><body><p><span style=\" font-weight:700; color:white;\">{load_yml(f"{Path.home()}/Library/Application Support/PolarAttack/config.yml")['name']}</span></p></body></html>"))
+                                     f"<html><head/><body><p><span style=\" font-weight:700; font-family:Arial;color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
 
 
 
@@ -1467,7 +1486,7 @@ class NewShoeOrSport(QDialog):
         self.type = type_
         self.no = no
         self.data = data
-        self.sport_yaml = load_yml(f"{APP_DIR}/shoes_sports.yml")
+        self.sport_yaml = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
         #nothig after :)
         self.setupUi()
         self.assign_dict = {}
