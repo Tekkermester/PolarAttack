@@ -79,9 +79,10 @@ class Uploading(QThread):
         chrome_binary, driver_path = chromium_path()
         options = Options()
         options.binary_location = chrome_binary
-        #options.add_argument("--headless")
+        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
         #options.add_argument("--user-data-dir=" + os.path.join(CACHE_DIR, "chrome_profile"))
         #options.add_argument("--disk-cache-dir=" + os.path.join(CACHE_DIR, "chrome_cache"))
 
@@ -224,9 +225,10 @@ class GetShoes(QThread):
         chrome_binary, driver_path = chromium_path()
         options = Options()
         options.binary_location = chrome_binary
-        options.add_argument("--headless")
+        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
 
         service = Service(driver_path)
         self.driver = webdriver.Chrome(service=service, options=options)
@@ -277,9 +279,10 @@ class GetSpotrs(QThread):
         chrome_binary, driver_path = chromium_path()
         options = Options()
         options.binary_location = chrome_binary
-        options.add_argument("--headless")
+        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
 
         service = Service(driver_path)
         self.driver = webdriver.Chrome(service=service, options=options)
