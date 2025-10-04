@@ -15,7 +15,7 @@ def chromium_path():
         return resource_path("chromium_win\\chrome.exe"), resource_path("chromedriver.exe") #windows version
 
 def sep()-> str:
-    if platform.system() == "Darwin":
-        return '/'
-    else:
+    if platform.system() == "Windows":
         return '\\'
+    else:
+        return '/'
