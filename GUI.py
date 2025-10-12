@@ -206,26 +206,23 @@ class UiMainWindow(QWidget):
         self.name.setObjectName("name")
         self.horizontalLayout.addWidget(self.name)
 
-        #state button
-        self.state = QtWidgets.QPushButton(self.top)
-        self.state.setEnabled(True)
+        #progress bar
+        self.state = QGroupBox()
+        self.state_layout = QHBoxLayout()
+        self.state.setLayout(self.state_layout)
+        self.state.setMinimumSize(200, 90)
+        #place holder label
+        self.progress_placeholder = QLabel("Nincs folymatban feltöltés...")
+        self.progress_placeholder.setStyleSheet("color:gray;")
+        self.state_layout.addWidget(self.progress_placeholder)
+
 
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.state.sizePolicy().hasHeightForWidth())
         self.state.setSizePolicy(sizePolicy)
-        self.state.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.state.setStyleSheet("background-color:transparent;\n"
-                                 "border-radius: 15px;")
-        self.state.setText("")
 
-        # ok.png or offline.png ------------------------
-        state_icon = QtGui.QIcon()
-        state_icon.addPixmap(QtGui.QPixmap("ui/icons/offline.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off) #state változó
-        self.state.setIcon(state_icon)
-        self.state.setIconSize(QtCore.QSize(20, 20))
-        self.state.setObjectName("state")
 
         self.horizontalLayout.addWidget(self.state, 0, QtCore.Qt.AlignRight)
 
