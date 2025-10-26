@@ -1,14 +1,14 @@
 import os
 import sys
 import time
-
+import traceback
 
 import selenium.common
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QEventLoop
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from utils import load_yml, time_split
-from paths import APP_DIR, chromium_path, sep, CACHE_DIR
+from paths import APP_DIR, chromium_path, sep, CACHE_DIR, LOG_DIR
 
 from bs4 import BeautifulSoup
 
@@ -222,48 +222,53 @@ class GetShoes(QThread):
         self.password = self.config['ap_passw']
 
     def run(self):
-        chrome_binary, driver_path = chromium_path()
-        options = Options()
-        options.binary_location = chrome_binary
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
+        try:
+            chrome_binary, driver_path = chromium_path()
+            options = Options()
+            options.binary_location = chrome_binary
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
 
-        service = Service(driver_path)
-        self.driver = webdriver.Chrome(service=service, options=options)
-        #login to attackpoint
-        self.driver.get("https://attackpoint.org/login.jsp")
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.NAME, 'username')))
-        username = self.driver.find_element(By.NAME, 'username')
-        username.clear()
-        username.send_keys(self.ap_username)
-        passw = self.driver.find_element(By.NAME, 'password')
-        passw.clear()
-        passw.send_keys(self.password + Keys.ENTER)
-        #navigate to shoes
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
-        shoes_btn = self.driver.find_element(By.XPATH, "//a[text()=\'shoes\']")
-        shoes_btn.click()
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[@href=\'/editshoes.jsp\' and text()=\'add a new pair\']")))
-        #to bs4
-        html = self.driver.page_source
-        soup = BeautifulSoup(html, "html.parser")
+            service = Service(driver_path)
+            self.driver = webdriver.Chrome(service=service, options=options)
+            #login to attackpoint
+            self.driver.get("https://attackpoint.org/login.jsp")
+            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.NAME, 'username')))
+            username = self.driver.find_element(By.NAME, 'username')
+            username.clear()
+            username.send_keys(self.ap_username)
+            passw = self.driver.find_element(By.NAME, 'password')
+            passw.clear()
+            passw.send_keys(self.password + Keys.ENTER)
+            #navigate to shoes
+            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
+            shoes_btn = self.driver.find_element(By.XPATH, "//a[text()=\'shoes\']")
+            shoes_btn.click()
+            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[@href=\'/editshoes.jsp\' and text()=\'add a new pair\']")))
+            #to bs4
+            html = self.driver.page_source
+            soup = BeautifulSoup(html, "html.parser")
 
-        table = soup.find('table')
-        rows = table.find_all('tr')[1:]
-        shoes_on_ap = []
-        for row in rows:
-            td = row.find_all('td')
-            shoes_on_ap.append(td[1].get_text(strip=True))
-        #compare shoe lists
-        shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
-        shoes = shoes_sports['shoes']
-        new = list(set(shoes_on_ap) - set(shoes))
-        old = list(set(shoes) - set(shoes_on_ap))
-        #return
-        self.driver.quit()
-        self.ready.emit(new, old)
+            table = soup.find('table')
+            rows = table.find_all('tr')[1:]
+            shoes_on_ap = []
+            for row in rows:
+                td = row.find_all('td')
+                shoes_on_ap.append(td[1].get_text(strip=True))
+            #compare shoe lists
+            shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
+            shoes = shoes_sports['shoes']
+            new = list(set(shoes_on_ap) - set(shoes))
+            old = list(set(shoes) - set(shoes_on_ap))
+            #return
+            self.driver.quit()
+            self.ready.emit(new, old)
+        except  Exception:
+            self.ready.emit([], [])
+            with open(f"{LOG_DIR}{sep()}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
+                log.write(str(traceback.format_exc()))
 
 
 class GetSpotrs(QThread):
@@ -276,46 +281,54 @@ class GetSpotrs(QThread):
         self.password = self.config['ap_passw']
 
     def run(self):
-        chrome_binary, driver_path = chromium_path()
-        options = Options()
-        options.binary_location = chrome_binary
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
+        try:
+            chrome_binary, driver_path = chromium_path()
+            options = Options()
+            options.binary_location = chrome_binary
+            options.add_argument("--headless=new")
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-dev-shm-usage")
+            options.add_argument("--disable-gpu")
 
-        service = Service(driver_path)
-        self.driver = webdriver.Chrome(service=service, options=options)
-        #login to attackpoint
-        self.driver.get("https://attackpoint.org/login.jsp")
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.NAME, 'username')))
-        username = self.driver.find_element(By.NAME, 'username')
-        username.clear()
-        username.send_keys(self.ap_username)
-        passw = self.driver.find_element(By.NAME, 'password')
-        passw.clear()
-        passw.send_keys(self.password + Keys.ENTER)
-        #navigate to activity types settings
-        WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
-        self.driver.find_element(By.XPATH, "//a[text()='Settings']").click()
-        self.driver.find_element(By.XPATH, '//a[@href=\"/editactivitytypes.jsp\"]').click()
-        #bs4
-        html = self.driver.page_source
-        soup = BeautifulSoup(html, 'html.parser')
+            service = Service(driver_path)
+            self.driver = webdriver.Chrome(service=service, options=options)
+            #login to attackpoint
+            self.driver.get("https://attackpoint.org/login.jsp")
 
-        table = soup.find('tbody')
-        rows = table.find_all('tr')[1:-2]
 
-        activitys_on_ap = []
-        for row in rows:
-            td = row.find_all('td')
-            td_2 = td[1].find('input')
-            data = td_2.get('value')
-            activitys_on_ap.append(data)
-        shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
-        sports = shoes_sports["sports"]
-        new = list(set(activitys_on_ap) - set(sports))
-        old = list(set(sports) - set(activitys_on_ap))
-        #
-        self.driver.quit()
-        self.ready.emit(new, old)
+
+            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.NAME, 'username')))
+            username = self.driver.find_element(By.NAME, 'username')
+            username.clear()
+            username.send_keys(self.ap_username)
+            passw = self.driver.find_element(By.NAME, 'password')
+            passw.clear()
+            passw.send_keys(self.password + Keys.ENTER)
+            #navigate to activity types settings
+            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
+            self.driver.find_element(By.XPATH, "//a[text()='Settings']").click()
+            self.driver.find_element(By.XPATH, '//a[@href=\"/editactivitytypes.jsp\"]').click()
+            #bs4
+            html = self.driver.page_source
+            soup = BeautifulSoup(html, 'html.parser')
+
+            table = soup.find('tbody')
+            rows = table.find_all('tr')[1:-2]
+
+            activitys_on_ap = []
+            for row in rows:
+                td = row.find_all('td')
+                td_2 = td[1].find('input')
+                data = td_2.get('value')
+                activitys_on_ap.append(data)
+            shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
+            sports = shoes_sports["sports"]
+            new = list(set(activitys_on_ap) - set(sports))
+            old = list(set(sports) - set(activitys_on_ap))
+            #
+            self.driver.quit()
+            self.ready.emit(new, old)
+        except Exception:
+            self.ready.emit([],[])
+            with open(f"{LOG_DIR}{sep()}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
+                log.write(str(traceback.format_exc()))
