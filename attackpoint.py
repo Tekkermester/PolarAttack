@@ -25,10 +25,10 @@ from selenium.webdriver.support import expected_conditions as ec
 
 
 class Uploading(QThread):
-    finished = pyqtSignal(str)  # Signal to notify when the task is done
+    finished = pyqtSignal(list)  # Signal to notify when the task is done
     show_injury_window = pyqtSignal(str, str, str)
     def __init__(self, year, month, day, hour, activty_tpye, workout, intensity, activity_sub_type,
-                 total_time, distance, units, climb, shoes, avg_hr, max_hr, resting_hr, sleep, weight, description, injured, sick, rest_day, injury_data):
+                 total_time, distance, units, climb, shoes, avg_hr, max_hr, resting_hr, sleep, weight, description, injured, sick, rest_day, injury_data, ex_id):
         super().__init__()
         self.driver = None
         self.year = year
@@ -57,6 +57,7 @@ class Uploading(QThread):
         self.sick = sick
         self.rest_day = rest_day
         self.injury_data = injury_data
+        self.ex_id = ex_id #exercise's id
         self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
@@ -73,7 +74,7 @@ class Uploading(QThread):
             import traceback
             print("Exception in Uploading thread:", e)
             traceback.print_exc()
-            self.finished.emit("Error")
+            self.finished.emit(["Error", self.ex_id])
 
     def upload_to_attackpoint(self):
         chrome_binary, driver_path = chromium_path()
@@ -174,7 +175,7 @@ class Uploading(QThread):
         #wait until done I think
         #WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//h2[text()=\'Training\']")))
         self.driver.quit()
-        return "Siker"
+        return ["Siker", self.ex_id]
 
     def injury_upload(self, data):
         print(self.driver.page_source)
@@ -202,14 +203,14 @@ class Uploading(QThread):
         self.driver.find_element(By.XPATH, "//input[@type='submit' and @value='Submit']").click()
         WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[text()='record a new injury']")))
         self.driver.quit()
-        return "Siker"
+        return ["Siker", self.ex_id]
 
 
     def injury_no_thanks(self):
         self.driver.find_element(By.XPATH, "//a[@class=\'btn\' and text()=\'No thanks\']").click()
         WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.CLASS_NAME, "logbody")))
         self.driver.quit()
-        return "Siker"
+        return ["Siker", self.ex_id]
 
 
 class GetShoes(QThread):
