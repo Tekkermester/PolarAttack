@@ -1,12 +1,10 @@
 import sys
-import os
 
 from PyQt5.QtGui import QIcon
 
 from GUI import UiMainWindow, LoadingWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtCore import Qt
-from PyQt5 import QtWidgets, QtCore, QtGui
+from PyQt5 import QtWidgets, QtCore
 
 def main():
     app = QApplication(sys.argv)
