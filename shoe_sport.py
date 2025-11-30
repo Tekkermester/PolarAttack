@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread
 from utils import load_yml, dump_yaml
 from paths import APP_DIR, LOG_DIR, sep
 import time
@@ -48,12 +48,15 @@ class Sports(QThread):
             else:
                 for sport in self.data:
                     sp_yaml['sports'].remove(sport)
-                   #delete connection
-                    sp_yaml
+                    #delete connection
+                    for v in sp_yaml['sport_dict'].values():
+                        if v == sport:
+                            sp_yaml['sport_dict'] = None
+
+
 
 
                 dump_yaml(self.filename, sp_yaml)
         except Exception as e:
             with open(f"{LOG_DIR}{sep()}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
                 log.write(str(e))
-
