@@ -10,10 +10,10 @@ from paths import APP_DIR, sep
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
-from PyQt5.QtCore import QUrl, Qt, QSize, pyqtSignal, QTimer, QObject,QRunnable,pyqtSlot, QPoint, QDate
+from PyQt5.QtCore import QUrl, Qt, QSize, QTimer, QObject,QRunnable,pyqtSlot, QPoint, QDate
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, QAction, \
     QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, QDateEdit, \
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget, QCompleter
+    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget, QCompleter, QScrollArea
 from PyQt5.QtGui import QGuiApplication, QFont, QIcon
 import sys
 import json
@@ -28,6 +28,8 @@ class UiMainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.injury_window = None
+        self.uploading_running = False
+        self.upload_queue = []
 
 
 
@@ -207,24 +209,33 @@ class UiMainWindow(QWidget):
         self.horizontalLayout.addWidget(self.name)
 
         #progress bar
-        self.state = QGroupBox()
-        self.state_layout = QHBoxLayout()
-        self.state.setLayout(self.state_layout)
+        self.state = QWidget()
+        self.state_layout = QVBoxLayout(self.state)
+        self.state_layout.setAlignment(Qt.AlignTop)
+        self.state_layout.setSpacing(6)
+        # self.state.setLayout(self.state_layout)
         self.state.setMinimumSize(200, 90)
+        self.state.setMaximumHeight(95)
         #place holder label
         self.progress_placeholder = QLabel("Nincs folymatban feltöltés...")
+        self.progress_placeholder.setObjectName('placeholder')
         self.progress_placeholder.setStyleSheet("color:gray;")
         self.state_layout.addWidget(self.progress_placeholder)
 
 
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.state.sizePolicy().hasHeightForWidth())
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+        # sizePolicy.setHorizontalStretch(0)
+        # sizePolicy.setVerticalStretch(0)
+        # sizePolicy.setHeightForWidth(self.state.sizePolicy().hasHeightForWidth())
         self.state.setSizePolicy(sizePolicy)
+        #scroll area
+        self.state_scroll = QScrollArea()
+        self.state_scroll.setWidgetResizable(True)
+        self.state_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.state_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.state_scroll.setWidget(self.state)
 
-
-        self.horizontalLayout.addWidget(self.state, 0, QtCore.Qt.AlignRight)
+        self.horizontalLayout.addWidget(self.state_scroll, 0, QtCore.Qt.AlignRight)
 
         #refresh icon --
         self.refresh = QtWidgets.QPushButton(self.top)
@@ -345,7 +356,7 @@ class UiMainWindow(QWidget):
                                                     border-radius: 5px;
                                                     padding: 5px;
                                                 }
-                                            
+
                                                 QGroupBox#right QComboBox QAbstractItemView {
                                                     background-color: rgb(50, 50, 50);
                                                     color: white;
@@ -358,7 +369,7 @@ class UiMainWindow(QWidget):
                                                     width: 0px;
                                                     height: 0px;
                                                 }
-                                            
+
                                                 QGroupBox#right QComboBox::drop-down {
                                                     background-color: orange;
                                                     border: none;
@@ -366,7 +377,7 @@ class UiMainWindow(QWidget):
                                                     border-top-right-radius: 5px;
                                                     border-bottom-right-radius: 5px;
                                                 }
-                                            
+
                                                 QGroupBox#right QComboBox::down-arrow {
                                                     image: url('ui/icons/down.png');
                                                     width: 20px;
@@ -560,7 +571,7 @@ class UiMainWindow(QWidget):
                     }
 
                     QPushButton:hover {
-                        background-color: #FF8C00; 
+                        background-color: #FF8C00;
                     }
 
                     QPushButton:pressed {
@@ -851,9 +862,9 @@ class UiMainWindow(QWidget):
         sleep_hbox.addWidget(self.lineEditSleep)
         sleep_hbox.addStretch(1)
 
-        injured_vbox = QVBoxLayout()
-        injured_vbox.addWidget(injured_label)
-        injured_vbox.addWidget(self.checkBoxInjured)
+        # injured_vbox = QVBoxLayout()
+        # injured_vbox.addWidget(injured_label)
+        # injured_vbox.addWidget(self.checkBoxInjured)
 
         sick_vbox = QVBoxLayout()
         sick_vbox.addWidget(sick_label)
@@ -872,7 +883,7 @@ class UiMainWindow(QWidget):
         gridLayout_Metrics.addLayout(resting_hr_hbox, 1, 0)
         gridLayout_Metrics.addLayout(sleep_hbox, 1, 1)
         gridLayout_Metrics.addLayout(weight_hbox, 1, 2)
-        gridLayout_Metrics.addLayout(injured_vbox, 1, 3)
+        # gridLayout_Metrics.addLayout(injured_vbox, 1, 3)
         gridLayout_Metrics.addLayout(sick_vbox,1,4)
         gridLayout_Metrics.addLayout(rest_vbox,1,5)
 
@@ -914,7 +925,7 @@ class UiMainWindow(QWidget):
                 background-color: #E67300;
             }
         ''')
-        self.pushButtonSubmitBottom.clicked.connect(self.start_upload)
+        self.pushButtonSubmitBottom.clicked.connect(lambda _, ex_id=workout_data[0]:self.start_upload(ex_id))
         horizontalLayout_BottomSubmit.addWidget(self.pushButtonSubmitBottom)
 
         self.right_layout.addLayout(horizontalLayout_BottomSubmit)
@@ -954,26 +965,81 @@ class UiMainWindow(QWidget):
 
         # uploadddd
 
-    def start_upload(self):
+    def start_upload(self, ex_id: str):
         # Create a worker instance
-        self.worker = Uploading(self.comboBoxYear.currentText(),self.comboBoxMonth.currentText(),self.comboBoxDay.currentText(),self.comboBoxSession.currentText(),self.comboBoxActivity.currentText(),self.comboBoxWorkout.currentText(),self.comboBoxIntensity.currentText(), self.lineEditActivitySubType.text(),self.lineEditTotalTime.text(),self.lineEditDistance.text(),self.comboBoxUnits.currentText(),self.lineEditClimb.text(),self.comboBoxShoes.currentText(),self.lineEditAvgHR.text(),self.lineEditMaxHR.text(), self.lineEditRestingHR.text(),self.lineEditSleep.text(),self.lineEditWeight.text(), self.textEditDescription.toPlainText(),self.checkBoxInjured.checkState(), self.checkBoxSick.checkState(), self.checkBoxRest.checkState(), {})
-        # Connect the finished signal to a callback
-        self.worker.show_injury_window.connect(self.show_injury_window)  # Connect signal
-        self.worker.finished.connect(self.upload_finished)
-        # Start the worker
-        self.worker.start()
+        worker = Uploading(self.comboBoxYear.currentText(),self.comboBoxMonth.currentText(),self.comboBoxDay.currentText(),
+                                self.comboBoxSession.currentText(),self.comboBoxActivity.currentText(),
+                                self.comboBoxWorkout.currentText(),self.comboBoxIntensity.currentText(),
+                                self.lineEditActivitySubType.text(),self.lineEditTotalTime.text(),self.lineEditDistance.text(),
+                                self.comboBoxUnits.currentText(),self.lineEditClimb.text(),self.comboBoxShoes.currentText(),
+                                self.lineEditAvgHR.text(),self.lineEditMaxHR.text(), self.lineEditRestingHR.text(),
+                                self.lineEditSleep.text(),self.lineEditWeight.text(), self.textEditDescription.toPlainText(),
+                                self.checkBoxInjured.checkState(), self.checkBoxSick.checkState(), self.checkBoxRest.checkState(),
+                                {}, ex_id)
 
-    def finished(self):
-        pass
+        self.upload_queue.append(worker)
+        if len(self.upload_queue) == 1: # there was no item in the list before
+            worker.finished.connect(self.upload_finished)
+            worker.start()
+        # self.worker.show_injury_window.connect(self.show_injury_window)  # Connect signal
+
+
+
+        #updating ui
+        status_label = QLabel(f"Feltöltés... {ex_id}")
+        status_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        status_label.setStyleSheet('''
+                            background-color: #FFC34F;
+                            color: white;
+                            border: 3px solid #1C1D20;
+                            border-radius: 10px;
+        ''')
+
+        status_label.setObjectName(ex_id)
+        status_label.setMinimumHeight(30)
+        status_label.setMaximumHeight(30)
+        status_label.setMaximumWidth(160)
+        #hover
+
+        #delete placeholder
+        for i in range(self.state_layout.count()):
+            item = self.state_layout.itemAt(i)
+            if item.widget().objectName() == "placeholder":
+                self.state_layout.takeAt(i)
+                item.widget().setParent(None)
+                item.widget().deleteLater()
+        #add label
+        self.state_layout.addWidget(status_label)
+
+
     def show_injury_window(self, year, month, day):
         self.injury_window = InjuryWindow(year, month, day, self .worker)
         self.injury_window.show()
         self.injury_window.raise_()
         self.injury_window.activateWindow()
 
-    def upload_finished(self, result):
-        #shoul manage the ui thing
-        print(result)
+    def upload_finished(self, result:list[str]): #[siker, ex_id]
+        #update ui
+        try:
+            for i in range(self.state_layout.count()):
+                item = self.state_layout.itemAt(i)
+                if item.widget().objectName() == result[1] and result[0] == "Siker":
+                        self.state_layout.takeAt(i)
+                        item.widget().setParent(None)
+        except AttributeError:
+            print('Hiba')
+
+        #clear upload_queue
+        self.upload_queue.pop(0)
+        #start next upload if exists and deletes from the list
+        if len(self.upload_queue) != 0:
+            self.upload_queue[0].finished.connect(self.upload_finished)
+            self.upload_queue[0].start()
+
+        else:
+            pass
+
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -984,6 +1050,10 @@ class UiMainWindow(QWidget):
         self.name.setText(_translate(f"MainWindow",
                                      f"<html><head/><body><p><span style=\" font-weight:700; font-family:Arial;color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
 
+    def closeEvent(self, a0):
+        uplo = Uploading(*args)
+        uplo.driver.quit()
+        a0.accept()
 
 
 class LoadingWindow(QWidget):
@@ -1255,14 +1325,14 @@ class InjuryWindow(QMainWindow):
                                             border-radius: 9px;
                                             padding: 4px 18px;
                                         }
-                            
+
                                         QPushButton:hover {
                                             background-color: #FF8C00;
                                         }
-                            
+
                                         QPushButton:pressed {
                                             background-color: #E67300;
-                                        } 
+                                        }
                                     ''')
         button_layout = QHBoxLayout()
         button_layout.addWidget(submit_button, alignment=Qt.AlignLeft)
@@ -1303,7 +1373,7 @@ class InjuryWindow(QMainWindow):
 
                                                 QPushButton:pressed {
                                                     background-color: #E67300;
-                                                } 
+                                                }
                                             ''')
         blayout.addWidget(info)
         blayout.addWidget(thanks_btn)
@@ -1798,4 +1868,3 @@ class NewShoeOrSport(QDialog):
 #     app = QApplication([])
 #     injury_dialog = NewShoeOrSport("sports", "new",['tollas'])
 #     injury_dialog.exec_()
-
