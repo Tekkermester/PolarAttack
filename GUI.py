@@ -1038,6 +1038,7 @@ class UiMainWindow(QWidget):
         except AttributeError:
             pass
         if self.state_layout.count() == 0:
+            # self.state_layout.addWidget(self.progress_placeholder)
             self.state_layout.addWidget(self.progress_placeholder)
         #clear upload_queue
         self.upload_queue.pop(0)
