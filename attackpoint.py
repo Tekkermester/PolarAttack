@@ -22,7 +22,58 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as ec
 
 
+def kill_chromium_processes():
+    """
+    Attempt to terminate chromium/chrome and chromedriver processes.
+    Tries psutil if available, otherwise uses platform-specific commands.
+    Returns a list of (name, pid) tuples that were terminated (best-effort).
+    """
+    killed = []
+    try:
+        import psutil
+    except Exception:
+        psutil = None
 
+    patterns = ('chromedriver', 'chromium', 'chrome', 'Google Chrome')
+
+    if psutil:
+        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            try:
+                name = (proc.info.get('name') or '').lower()
+                cmd = ' '.join(proc.info.get('cmdline') or []).lower()
+                if any(p in name or p in cmd for p in patterns):
+                    try:
+                        proc.terminate()
+                        killed.append((proc.info.get('name'), proc.info.get('pid')))
+                    except Exception:
+                        try:
+                            proc.kill()
+                            killed.append((proc.info.get('name'), proc.info.get('pid')))
+                        except Exception:
+                            pass
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        # wait a short while
+        gone, alive = psutil.wait_procs([pinfo for p in psutil.process_iter()], timeout=1)
+        return killed
+    else:
+        import platform
+        import subprocess
+        system = platform.system()
+        try:
+            if system == 'Windows':
+                # try to kill chromedriver and chrome by image name
+                subprocess.run(['taskkill', '/F', '/IM', 'chromedriver.exe'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['taskkill', '/F', '/IM', 'chrome.exe'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # can't enumerate PIDs reliably without psutil; return empty list
+            else:
+                # Unix-like: attempt pkill -f for various patterns
+                subprocess.run(['pkill', '-f', 'chromedriver'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['pkill', '-f', 'Chromium'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['pkill', '-f', 'chrome'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        return killed
 
 class Uploading(QThread):
     finished = pyqtSignal(list)  # Signal to notify when the task is done
@@ -64,6 +115,29 @@ class Uploading(QThread):
 
         self.wait_loop = QEventLoop()
 
+        self._cancelled = False
+
+    #if the procces cancelled
+    def cancel(self):
+            """Request cancellation from the main thread. Attempts to quit driver and exit the wait loop."""
+            self._cancelled = True
+            try:
+                # try to let the thread shut down the driver itself
+                if self.driver:
+                    try:
+                        self.driver.quit()
+                    except Exception:
+                        # ignore; driver might already be dead
+                        pass
+            except Exception:
+                pass
+            try:
+                if getattr(self, "wait_loop", None) is not None:
+                    # exit any nested event loop so upload thread can continue/finish
+                    self.wait_loop.exit()
+            except Exception:
+                pass
+
     def run(self):
         try:
         # Perform the background task
@@ -71,10 +145,27 @@ class Uploading(QThread):
             # Emit the result
             self.finished.emit(result)
         except Exception as e:
-            import traceback
-            print("Exception in Uploading thread:", e)
-            traceback.print_exc()
-            self.finished.emit(["Error", self.ex_id])
+            # handle remote disconnects / protocol errors gracefully as cancellations
+            try:
+                from http.client import RemoteDisconnected as _RemoteDisconnected
+            except Exception:
+                _RemoteDisconnected = ()
+            try:
+                import urllib3
+                proto_err = getattr(urllib3.exceptions, "ProtocolError", None)
+            except Exception:
+                proto_err = None
+
+            is_remote_disc = isinstance(e, tuple(filter(None, (_RemoteDisconnected, proto_err))))
+            # Also accept textual match if library types differ
+            if is_remote_disc or 'RemoteDisconnected' in str(e) or 'ProtocolError' in str(e):
+                # treat as a cancelled/aborted upload
+                self.finished.emit(["Cancelled", self.ex_id])
+            else:
+                # unexpected exception: print for debugging and emit Error
+                print("Exception in Uploading thread:", e)
+                traceback.print_exc()
+                self.finished.emit(["Error", self.ex_id])
 
     def upload_to_attackpoint(self):
         chrome_binary, driver_path = chromium_path()

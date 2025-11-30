@@ -270,6 +270,11 @@ class UiMainWindow(QWidget):
         self.verticalLayout_3.addWidget(self.main)
         self.verticalLayout.addWidget(self.main_body)
         MainWindow.setCentralWidget(self.centralwidget)
+        # Bind the QMainWindow's closeEvent to this UiMainWindow's handler
+        def main_window_close(event):
+            # call the UiMainWindow close handler
+            self._on_mainwindow_close(event)
+        MainWindow.closeEvent = main_window_close
 
 
         ################## main body ###################################
@@ -1007,15 +1012,19 @@ class UiMainWindow(QWidget):
         status_label.setMinimumHeight(30)
         status_label.setMaximumHeight(30)
         status_label.setMaximumWidth(160)
+        #add label
+        self.clearLayout(self.right_layout)
+        self.right_layout.addWidget(self.choose_a_tarinng_label,0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         #hover
 
         #delete placeholder
         for i in range(self.state_layout.count()):
             item = self.state_layout.itemAt(i)
             if item.widget().objectName() == "placeholder":
-                self.state_layout.takeAt(i)
-                item.widget().setParent(None)
-                item.widget().deleteLater()
+                # self.state_layout.takeAt(i)
+                # item.widget().setParent(None)
+                # item.widget().deleteLater()
+                item.widget().hide()
         #add label
         self.state_layout.addWidget(status_label)
 
@@ -1038,8 +1047,14 @@ class UiMainWindow(QWidget):
         except AttributeError:
             pass
         if self.state_layout.count() == 0:
-            # self.state_layout.addWidget(self.progress_placeholder)
             self.state_layout.addWidget(self.progress_placeholder)
+            self.progress_placeholder.show()
+
+        #add label
+        self.choose_a_tarinng_label = QLabel("<h1 style=\"color: orange;\">Válassz ki egy új edzést ha szertnél!</h1>")
+        self.clearLayout(self.right_layout)
+        self.right_layout.addWidget(self.choose_a_tarinng_label,0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+
         #clear upload_queue
         self.upload_queue.pop(0)
         #start next upload if exists and deletes from the list
@@ -1060,10 +1075,127 @@ class UiMainWindow(QWidget):
         self.name.setText(_translate(f"MainWindow",
                                      f"<html><head/><body><p><span style=\" font-weight:700; font-family:Arial;color:white;\">{load_yml(f"{APP_DIR}{sep()}config.yml")['name']}</span></p></body></html>"))
 
-    def closeEvent(self, a0):
-        uplo = Uploading(*args)
-        uplo.driver.quit()
-        a0.accept()
+    def _on_mainwindow_close(self, event):
+        # find any running Uploading threads
+        running_threads = [w for w in getattr(self, "upload_queue", [])
+                            if (hasattr(w, "ex_id") and getattr(w, "ex_id") is not None)
+                            and w.__class__.__name__ == "Uploading" and w.isRunning()]
+
+        if running_threads:
+            msg = QtWidgets.QMessageBox(self)
+            msg.setWindowTitle("Feltöltés még folyamatban!")
+            msg.setText("Feltöltés még folyamatban!\nHa bezárod az edzés nem biztos, hogy fel lesz töltve!\nBiztos kilépsz?")
+
+
+            icon_path = "ui/icons/exclamation.png"
+
+            msg.setIconPixmap(QtGui.QPixmap(icon_path).scaled(50, 50, QtCore.Qt.KeepAspectRatio))
+
+            igen_btn = msg.addButton("Igen", QtWidgets.QMessageBox.YesRole)
+            nem_btn = msg.addButton("Nem", QtWidgets.QMessageBox.NoRole)
+            igen_btn.setObjectName("btn_igen")
+            nem_btn.setObjectName("btn_nem")
+
+            msg.setDefaultButton(nem_btn)
+
+            msg.setStyleSheet("""
+                            QMessageBox {
+                                background-color: rgb(24,24,24);
+                                color: white;
+                                font-family: Arial;
+                            }
+                            QMessageBox QLabel#qt_msgbox_label, QMessageBox QLabel {
+                                color: white;
+                            }
+
+                            /* General QPushButton fallback (not used for custom buttons) */
+                            QMessageBox QPushButton {
+                                border-radius: 8px;
+                                padding: 6px 10px;
+                            }
+
+                            /* Nem: prominent orange button (larger) */
+                            QMessageBox QPushButton#btn_nem {
+                                background-color: rgb(214,143,36);
+                                color: white;
+                                font-weight: 600;
+                                min-width: 110px;
+                                padding: 8px 16px;
+                                font-size: 11pt;
+                            }
+                            QMessageBox QPushButton#btn_nem:hover {
+                                background-color: rgb(228,163,56);
+                            }
+
+                            /* Igen: smaller, gray button */
+                            QMessageBox QPushButton#btn_igen {
+                                background-color: rgb(80,80,80);
+                                color: white;
+                                font-weight: 400;
+                                min-width: 70px;
+                                padding: 4px 8px;
+                                font-size: 9pt;
+                            }
+                            QMessageBox QPushButton#btn_igen:hover {
+                                background-color: rgb(96,96,96);
+                            }
+                        """)
+
+            msg.exec_()
+            if msg.clickedButton() == igen_btn:
+                # User confirmed shutdown: try clean shutdown of Selenium drivers first
+                try:
+                    import signal, os
+                    from polarattack import attackpoint
+                except Exception:
+                    attackpoint = None
+
+                for w in running_threads:
+                    try:
+                        # try to quit the webdriver cleanly
+                        drv = getattr(w, "driver", None)
+                        if drv:
+                            try:
+                                drv.quit()
+                            except Exception:
+                                # try stopping underlying service process if present
+                                try:
+                                    svc = getattr(drv, "service", None)
+                                    proc = getattr(svc, "process", None)
+                                    if proc and hasattr(proc, "pid"):
+                                        try:
+                                            os.kill(proc.pid, signal.SIGTERM)
+                                        except Exception:
+                                            pass
+                                except Exception:
+                                    pass
+                        # lastly, attempt to stop thread's event loop if waiting
+                        if hasattr(w, "wait_loop") and getattr(w, "wait_loop", None) is not None:
+                            try:
+                                w.wait_loop.exit()
+                            except Exception:
+                                pass
+                    except Exception:
+                        # continue to next thread even on error
+                        pass
+
+                # After per-thread attempts, do a system-level cleanup for chromium/chromedriver
+                try:
+                    if attackpoint and hasattr(attackpoint, "kill_chromium_processes"):
+                        attackpoint.kill_chromium_processes()
+                except Exception:
+                    pass
+
+                # accept closing
+                event.accept()
+            else:
+                event.ignore()
+        else:
+            event.accept()
+
+
+
+
 
 
 class LoadingWindow(QWidget):
