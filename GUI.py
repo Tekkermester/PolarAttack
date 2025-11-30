@@ -479,10 +479,14 @@ class UiMainWindow(QWidget):
         else:
             pass
         if old:
-            window = NewShoeOrSport("shoes", 'old', old)
-            window.exec_()
-            window.raise_()
-            window.activateWindow()
+            for i in old:
+                if old in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['meghagyom']:
+                    old.remove(i)
+            if len(old) > 0:
+                window = NewShoeOrSport("shoes", 'old', old)
+                window.exec_()
+                window.raise_()
+                window.activateWindow()
         else:
             pass
 
@@ -496,10 +500,14 @@ class UiMainWindow(QWidget):
         else:
             pass
         if old:
-            window = NewShoeOrSport("sports", 'old', old)
-            window.exec_()
-            window.raise_()
-            window.activateWindow()
+            for i in old:
+                if old in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['meghagyom']:
+                    old.remove(i)
+            if len(old) > 0:
+                window = NewShoeOrSport("sports", 'old', old)
+                window.exec_()
+                window.raise_()
+                window.activateWindow()
         else:
             pass
 
@@ -1026,16 +1034,17 @@ class UiMainWindow(QWidget):
                 if item.widget().objectName() == result[1] and result[0] == "Siker":
                         self.state_layout.takeAt(i)
                         item.widget().setParent(None)
-        except AttributeError:
-            print('Hiba')
 
+        except AttributeError:
+            pass
+        if self.state_layout.count() == 0:
+            self.state_layout.addWidget(self.progress_placeholder)
         #clear upload_queue
         self.upload_queue.pop(0)
         #start next upload if exists and deletes from the list
         if len(self.upload_queue) != 0:
             self.upload_queue[0].finished.connect(self.upload_finished)
             self.upload_queue[0].start()
-
         else:
             pass
 
@@ -1088,7 +1097,7 @@ class LoadingWindow(QWidget):
 
 
 class InjuryWindow(QMainWindow):
-    def __init__(self, year:str, month:str, day:str, uploading_worker:any):
+    def __init__(self, year:str, month:str, day:str, uploading_worker:object):
         super().__init__()
         self.year = year
         self.month = month
@@ -1851,6 +1860,9 @@ class NewShoeOrSport(QDialog):
         self.assign_dict[sport] = value
 
     def cancel_clicked(self):
+        for i in self.data:
+            self.sport_yaml['meghagyom'].append(i)
+            dump_yaml(f"{APP_DIR}{sep()}shoes_sports.yml", self.sport_yaml)
         self.close()
     def manage_shoes(self):
         self.close()
