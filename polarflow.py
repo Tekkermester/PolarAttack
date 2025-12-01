@@ -23,7 +23,7 @@ class Flow:
         except FileNotFoundError:
             self.accestoken = ""
 
-    def get_trainings(self) -> str, int, str:
+    def get_trainings(self) -> tuple[object, object, object]:
         try:
             headers = {
                 'Accept': 'application/json',
