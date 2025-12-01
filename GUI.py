@@ -88,6 +88,8 @@ class UiMainWindow(QWidget):
         self.menu = QtWidgets.QToolButton(self.top)
         self.menu.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
 
+        self.menu.clicked.connect(self.menu_btn_clicked)
+
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -104,8 +106,10 @@ class UiMainWindow(QWidget):
         self.horizontalLayout.addWidget(self.menu)
 
         #settings button
-        self.Settings = QtWidgets.QPushButton(self.top)
+        self.Settings = QPushButton(self.top)
         self.Settings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+
+        self.Settings.clicked.connect(self.settings_btn_clicked)
 
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -621,11 +625,19 @@ class UiMainWindow(QWidget):
                     widget.setParent(None)
                 else:
                     self.clearLayout(item.layout())
+
     def refresh_button(self):
         self.refresh.setText("Refreshing...")
         self.load_trainings()
         self.refresh.setText("")
 
+    def settings_btn_clicked(self):
+        self.settings_window = SettingsWindow()
+        self.settings_window.show()
+
+    def menu_btn_clicked(self):
+        self.menu_window = MenuWindow()
+        self.menu_window.show()
 
     def uploader(self, workout_data:str):
         self.clearLayout(self.right_layout)
@@ -1192,8 +1204,6 @@ class UiMainWindow(QWidget):
                 event.ignore()
         else:
             event.accept()
-
-
 
 
 
@@ -2005,6 +2015,38 @@ class NewShoeOrSport(QDialog):
         self.manage_sports = Sports(self.no, self.assign_dict)
         self.manage_sports.start()
         self.close()
+
+class SettingsWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Settings")
+        self.setWindowIcon(QIcon("ui/icons/gear.png"))
+        self.resize(300, 500)
+
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+
+        lol_label = QLabel("<h1 style=\"color:orange;\">Pedig azt hitted, hogy vannak beállítások :(</h1>")
+        talan_label = QLabel('Talán majd lesznek...')
+        self.main_layout.addWidget(lol_label)
+        self.main_layout.addWidget(talan_label)
+
+class MenuWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Menu")
+        self.setWindowIcon(QIcon("ui/icons/menu.png"))
+        self.resize(200, 75)
+
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+
+        lol_label = QLabel("<h2 style=\"color:orange;\">Menu az nincs még ;(</h2>")
+        self.main_layout.addWidget(lol_label)
+
+
+
+
 
 
 
