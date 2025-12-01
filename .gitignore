@@ -1,9 +1,13 @@
+# chromium
 /chromium_mac/
+/chromium_win/
+
+# ide
 .idea/
 /__pycache__
-/chromium_win/
+.zed/
 /pyproject.toml
 /ui/icons/.DS_Store
+
 .DS_Store
 ui/.DS_Store
-.zed/
