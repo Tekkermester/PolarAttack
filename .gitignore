@@ -2,7 +2,7 @@
 /chromium_mac/
 /chromium_win/
 
-# ide
+# IDE
 .idea/
 /__pycache__
 .zed/
@@ -11,3 +11,5 @@
 
 .DS_Store
 ui/.DS_Store
+
+/todo.txt
