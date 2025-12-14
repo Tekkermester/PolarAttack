@@ -1,4 +1,5 @@
 from os.path import isfile
+from unittest.runner import TextTestRunner
 from paths import APP_DIR, sep
 import yaml
 import os
@@ -150,3 +151,9 @@ def calculate_token_expire_time(expires_in: int) -> datetime:
 def generate_member_id() -> str:
     user_name: str = load_yml(f"{APP_DIR}{sep()}config.yml")["ap_username"]
     return user_name.strip().replace(" ","").lower()
+
+def check_if_token_expired(expires_in: datetime) -> bool:
+    if datetime.utcnow() >= expires_in:
+        return True
+    else:
+        return False
