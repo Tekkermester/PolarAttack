@@ -1,18 +1,18 @@
 from os.path import isfile
-
+from paths import APP_DIR, sep
 import yaml
 import os
 import time
 import sys
 import platform
-
+from datetime import datetime, timedelta
 
 def load_yml(filename:str):
     try:
         with open(filename, encoding='utf-8') as f:
             return yaml.full_load(f)
     except FileNotFoundError:
-        print("Problem")  #reurn blank yaml sson...
+        return ""  #reurn blank yaml sson...
 
 def dump_yaml(filename:str, data: object):
     with open(filename, "w") as file:
@@ -141,3 +141,12 @@ def time_split(time_:str) -> list[str]:
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     return os.path.join(base_path, relative_path)
+
+def calculate_token_expire_time(expires_in: int) -> datetime:
+    token_received = datetime.utcnow()
+    return token_received + timedelta(seconds=expires_in)
+
+
+def generate_member_id() -> str:
+    user_name: str = load_yml(f"{APP_DIR}{sep()}config.yml")["ap_username"]
+    return user_name.strip().replace(" ","").lower()
