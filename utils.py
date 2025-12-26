@@ -119,7 +119,7 @@ def calc_altitude(alt_data:list)-> str:
     return str(int(ascent))
 
 
-def time_split(time_:str) -> list[str]:
+def time_split(time_:str) -> tuple[str, str, str, str]:
     s = time_.split("T")
     date = s[0].split("-")
     year = date[0]
