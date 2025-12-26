@@ -16,7 +16,7 @@ with open('config.json', 'r') as config_file:
 CLIENT_ID = config.get('CLIENT_ID')
 CLIENT_SECRET = config.get('CLIENT_SECRET')
 
-REDIRECT_URI = "http://localhost:8080/callback"
+REDIRECT_URI = config.get('REDIRECT_URL')
 
 AUTH_URL = (
     "https://flow.polar.com/oauth2/authorization"
