@@ -138,10 +138,6 @@ def time_split(time_:str) -> tuple[str, str, str, str]:
     return year, month, day, hour
 
 
-def resource_path(relative_path):
-    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-    return os.path.join(base_path, relative_path)
-
 def calculate_token_expire_time(expires_in: int) -> datetime:
     token_received = datetime.utcnow()
     return token_received + timedelta(seconds=expires_in)

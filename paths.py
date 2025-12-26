@@ -1,12 +1,18 @@
 import appdirs
 import platform
-from utils import resource_path
+import sys
+import os
 
 app_name = "PolarAttack"
 
 APP_DIR = appdirs.user_data_dir(app_name, roaming=True, appauthor=False)
 CACHE_DIR =appdirs.user_cache_dir(app_name, appauthor=False)
 LOG_DIR = appdirs.user_log_dir(app_name, appauthor=False)
+
+def resource_path(relative_path):
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
 
 def chromium_path():
     if platform.system() == "Darwin": #MacOS
