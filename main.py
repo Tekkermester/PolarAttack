@@ -1,5 +1,6 @@
 import sys
-
+from utils import load_yml
+from paths import APP_DIR, sep
 from PyQt5.QtGui import QIcon
 
 from GUI import UiMainWindow, LoadingWindow
@@ -39,8 +40,12 @@ def main():
 # Enable high DPI scaling
 #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
 
+config: dict = load_yml(f"{APP_DIR}{sep()}config.yml")
+
 if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-
-    main()
+    if config['first_use']:
+        pass#start first use process
+    else:
+        main()
