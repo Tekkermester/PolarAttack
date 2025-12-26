@@ -105,33 +105,37 @@ def register_user(access_token: str, member_id: str) -> str:
 
 # MAIN
 
-def main():
-    threading.Thread(target=run_server, daemon=True).start()
-    webbrowser.open(AUTH_URL)
+def start_register() -> bool:
+    try:
+        threading.Thread(target=run_server, daemon=True).start()
+        webbrowser.open(AUTH_URL)
 
-    while auth_code is None:
-        pass
+        while auth_code is None:
+            pass
 
-    token_data = exchange_code_for_token(auth_code)
+        token_data = exchange_code_for_token(auth_code)
 
-    access_token = token_data["access_token"]
-    polar_user_id = token_data["x_user_id"]
-    expires_in = token_data["expires_in"]
+        access_token = token_data["access_token"]
+        polar_user_id = token_data["x_user_id"]
+        expires_in = token_data["expires_in"]
 
-    tokens_yaml = load_yml(f"{APP_DIR}{sep()}tokens.yml")
+        tokens_yaml = load_yml(f"{APP_DIR}{sep()}tokens.yml")
 
-    tokens_yaml["accestoken"] = access_token
-    tokens_yaml["polar_user_id"] = polar_user_id
-    tokens_yaml["expires_in"] = calculate_token_expire_time(expires_in)
+        tokens_yaml["accestoken"] = access_token
+        tokens_yaml["polar_user_id"] = polar_user_id
+        tokens_yaml["expires_in"] = calculate_token_expire_time(expires_in)
 
 
-    member_id = generate_member_id()
-    tokens_yaml["member_id"] = member_id
+        member_id = generate_member_id()
+        tokens_yaml["member_id"] = member_id
 
-    result = register_user(access_token, member_id=member_id)
+        result = register_user(access_token, member_id=member_id)
 
-    dump_yaml(f"{APP_DIR}{sep()}tokens.yml",tokens_yaml)
+        dump_yaml(f"{APP_DIR}{sep()}tokens.yml",tokens_yaml)
 
-    config_yaml = load_yml(f"{APP_DIR}{sep()}config.yml")
-    config_yaml["name"] = f"{result['last-name']} {result['first-name']}"
-    dump_yaml(f"{APP_DIR}{sep()}config.yml", config_yaml)
+        config_yaml = load_yml(f"{APP_DIR}{sep()}config.yml")
+        config_yaml["name"] = f"{result['last-name']} {result['first-name']}"
+        dump_yaml(f"{APP_DIR}{sep()}config.yml", config_yaml)
+        return True
+    except:
+        return False
