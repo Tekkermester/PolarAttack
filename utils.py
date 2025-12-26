@@ -1,5 +1,4 @@
 from os.path import isfile
-from unittest.runner import TextTestRunner
 from paths import APP_DIR, sep
 import yaml
 import os
