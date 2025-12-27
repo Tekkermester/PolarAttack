@@ -2,7 +2,7 @@ import sys
 from utils import load_yml, dump_yaml
 from paths import APP_DIR, sep
 from PyQt5.QtGui import QIcon
-from first_use import FirstRunWizard
+from first_use import FirstRunWizard, create_folders
 from GUI import UiMainWindow, LoadingWindow
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWizard
 from PyQt5 import QtWidgets, QtCore
@@ -40,17 +40,32 @@ def main():
 # Enable high DPI scaling
 #os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
 
-config: dict = load_yml(f"{APP_DIR}{sep()}config.yml")
 
 if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
-    if config['first_use']:
+    try:
+        config: dict = load_yml(f"{APP_DIR}{sep()}config.yml")
+        if config['first_use']:
+            create_folders()
+            wizard = FirstRunWizard()
+            if wizard.exec_() == QWizard.Accepted:
+                config['first_use'] = False
+                dump_yaml(f"{APP_DIR}{sep()}config.yml", config)
+            else:
+                sys.exit(0)  # user cancelled setup
+        else:
+            main()
+        #run main after
+        main()
+
+    except FileNotFoundError:
+        create_folders()
         wizard = FirstRunWizard()
         if wizard.exec_() == QWizard.Accepted:
             config['first_use'] = False
             dump_yaml(f"{APP_DIR}{sep()}config.yml", config)
         else:
             sys.exit(0)  # user cancelled setup
-    else:
+        #run main after
         main()
