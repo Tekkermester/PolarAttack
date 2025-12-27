@@ -546,10 +546,17 @@ class UiMainWindow(QWidget):
                 item_layout = QVBoxLayout()
 
                 #altitude data ----
-                for i in ex['samples']:
-                    if i['sample_type'] == 3:
-                        data = i['data']
-                        altitudes = [float(i) for i in data.split(",")]
+                try:
+                    for i in ex['samples']:
+                        if i['sample_type'] == 3:
+                            data = i['data']
+                            altitudes = [float(i) for i in data.split(",")]
+                    altitude = calc_altitude(altitudes)
+                except KeyError:
+                    altitude = 0
+                except Exception:
+                    altitude = 0
+
                 #time formats________--____-----__
                 if time_format(ex['start_time']) == time.strftime("%m.%d"):
                     start_time = "Ma"
@@ -560,13 +567,21 @@ class UiMainWindow(QWidget):
                 else:
                     start_time = time_format(ex['start_time'])
 
+                #case if they dont have distance (pl indoor workout)
+                try:
+                    distance = calc_distance(ex['distance'])
+                except KeyError:
+                    distance = 0
+                    #if the distance 0 the altitude also should be zero
+                    altitude = 0
+
 
 
                 #labels------
                 workout_label = QLabel(f"<p><b><span style=\"color:white;font-size: 10pt\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
                                        f"<span style=\"font-weight: 800;color: orange; font-size: 17px\">{calc_duration(ex['duration'])}</span> <span style=\"color:white;\">-</span> "
-                                       f"<span style=\"font-size: 18px;color:white;\">{calc_distance(ex['distance'])} km</span> "
-                                       f"<span style=\"color: #a6a49f; font-size:2em\">+{calc_altitude(altitudes)}m</span>"
+                                       f"<span style=\"font-size: 18px;color:white;\">{distance} km</span> "
+                                       f"<span style=\"color: #a6a49f; font-size:2em\">+{altitude}m</span>"
                                        f"<span style=\"color:transparent;font-size:2px;\">{ex['id']}<span></p>")
                 item_layout.addWidget(workout_label)
 
@@ -675,8 +690,17 @@ class UiMainWindow(QWidget):
 
         intensity = "3"
         total_time = ap_calc_duration(workout['duration'])
-        distance = calc_distance(workout['distance'])
-        climb = calc_altitude(altitudes)
+
+        try:
+            distance = calc_distance(workout['distance'])
+            climb = calc_altitude(altitudes)
+        except KeyError:
+            distance = 0
+            #if the distance 0 the altitude also should be zero
+            climb = 0
+        except Exception:
+            distance = 0
+            climb = 0
         shoes = "Not Specified"
         avg_hr = workout['heart_rate']['average']
         max_hr = workout['heart_rate']['maximum']
@@ -978,8 +1002,8 @@ class UiMainWindow(QWidget):
         self.comboBoxActivity.setCurrentText(activity_type)
         self.comboBoxIntensity.setCurrentText(intensity)
         self.lineEditTotalTime.setText(total_time)
-        self.lineEditDistance.setText(distance)
-        self.lineEditClimb.setText(climb)
+        self.lineEditDistance.setText(str(distance))
+        self.lineEditClimb.setText(str(climb))
         self.comboBoxShoes.setCurrentText(shoes)
         self.lineEditAvgHR.setText(str(avg_hr))
         self.lineEditMaxHR.setText(str(max_hr))
