@@ -2,7 +2,7 @@ import json
 import requests
 import time
 import os
-from utils import load_yml, check_if_token_expired
+from utils import load_yml
 from paths import APP_DIR, LOG_DIR, CACHE_DIR, sep
 
 class Flow:
@@ -22,10 +22,6 @@ class Flow:
             self.tokens_yml: dict = load_yml(f"{self.SUPPORT_DIR}{sep()}tokens.yml")
 
             self.accestoken = self.tokens_yml["accestoken"]
-            if check_if_token_expired(self.tokens_yml["expires_in"]):
-                self.generate_new_access_token()
-            else:
-                pass
 
         except FileNotFoundError:
             self.accestoken = ""
@@ -62,7 +58,3 @@ class Flow:
             with open(f"{self.LOG_DIR}{sep()}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log","w") as log:
                 log.write(str(e))
             return None, None, e
-
-
-    def generate_new_access_token(self):
-        pass#go through auterization again (register.py)
