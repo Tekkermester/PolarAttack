@@ -1,10 +1,209 @@
 import sys
+import os
+from paths import APP_DIR, CACHE_DIR, LOG_DIR, sep
 from utils import load_yml, dump_yaml, APP_DIR, sep
 from PyQt5.QtWidgets import (QApplication, QWizard, QWizardPage, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox)
 from PyQt5.QtCore import Qt, QMetaObject
 from PyQt5.QtGui import QPixmap, QFont
 
 from user_registration import start_register_async
+
+
+def create_folders():
+    #create files
+    os.makedirs(APP_DIR, exist_ok=True)
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+    #create files------
+    config_template = "ap_passw:\nap_username:\nfirst_use:True\nname:\n"
+    tokens_template = "accestoken:\npolar_user_id:\nmember_id:\nexpires_in:"
+    shoes_sports_template = """shoes: []
+    sport_dict:
+      AEROBICS: null
+      AGILITY: null
+      AMERICAN_FOOTBALL: null
+      AQUATICS: null
+      BACKCOUNTRY_SKIING: null
+      BADMINTON: null
+      BALLET_DANCING: null
+      BALLROOM_DANCING: null
+      BASEBALL: null
+      BASKETBALL: null
+      BEACH_TENNIS: null
+      BEACH_VOLLEYBALL: null
+      BIATHLON: null
+      BODY_AND_MIN: null
+      BOOTCAMP: null
+      BOXING: null
+      CIRCUIT_TRAINING: null
+      CLIMBING: null
+      CORE: null
+      CRICKET: null
+      CROSS-COUNTRY_SKIING: null
+      CROSS_COUNTRY_RUNNING: null
+      CROSS_TRAINER: null
+      CURLING: null
+      CYCLING: null
+      DANCING: null
+      DOWNHILL_SKIING: null
+      DUATHLON: null
+      DUATHLON_CYCLING: null
+      DUATHLON_RUNNING: null
+      ESPORTS: null
+      E_BIKE: null
+      FIELD_HOCKEY: null
+      FINNISH_BASEBALL: null
+      FITNESS_BOXING: null
+      FITNESS_DANCING: null
+      FITNESS_MARTIAL_ARTS: null
+      FITNESS_STEP: null
+      FLOORBALL: null
+      FREE_MULTISPORT: null
+      FRISBEEGOLF: null
+      FUNCTIONAL_TRAINING: null
+      FUTSAL: null
+      GOLF: null
+      GRAVEL: null
+      GROUP_EXERCISE: null
+      GYMNASTICK: null
+      HANDBALL: null
+      HIIT: null
+      HIKING: null
+      ICE_HOCKEY: null
+      ICE_SKATING: null
+      INDOOR_CYCLING: null
+      INDOOR_ROWING: null
+      INLINE_SKATING: null
+      JAZZ_DANCING: null
+      JOGGING: null
+      JUDO_MARTIAL_ARTS: null
+      JUMP_ROPE: null
+      KETTLEBELL: null
+      KICKBIKE: null
+      KICKBOXING_MARTIAL_ARTS: null
+      LATIN_DANCING: null
+      LES_MILLS_BARRE: null
+      LES_MILLS_BODYATTACK: null
+      LES_MILLS_BODYBALANCE: null
+      LES_MILLS_BODYCOMBAT: null
+      LES_MILLS_BODYJAM: null
+      LES_MILLS_BODYPUMP: null
+      LES_MILLS_BODYSTEP: null
+      LES_MILLS_CXWORKS: null
+      LES_MILLS_GRIT_ATHLETIC: null
+      LES_MILLS_GRIT_CARDIO: null
+      LES_MILLS_GRIT_STRENGTH: null
+      LES_MILLS_RPM: null
+      LES_MILLS_SHBAM: null
+      LES_MILLS_SPRINT: null
+      LES_MILLS_TONE: null
+      LES_MILLS_TRIPLE: null
+      MOBILITY_DYNAMIC: null
+      MOBILITY_STATIC: null
+      MODERN_DANCING: null
+      MOTORSPORTS_CAR_RACING: null
+      MOTORSPORTS_ENDURO: null
+      MOTORSPORTS_HARD_ENDURO: null
+      MOTORSPORTS_MOTOCROSS: null
+      MOTORSPORTS_ROADRACING: null
+      MOTORSPORTS_SNOCROSS: null
+      MOUNTAIN_BIKING: null
+      NORDIC_WALKING: null
+      OBSTACLE_COURSE_RACING: null
+      OFFROADDUATHLON: null
+      OFFROADDUATHLON_CYCLING: null
+      OFFROADDUATHLON_RUNNING: null
+      OFFROADTRIATHLON: null
+      OFFROADTRIATHLON_CYCLING: null
+      OFFROADTRIATHLON_RUNNING: null
+      OFFROADTRIATHLON_SWIMMING: null
+      OPEN_WATER_SWIMMING: null
+      ORIENTEERING: null
+      ORIENTEERING_MTB: null
+      ORIENTEERING_SKI: null
+      OTHER_INDOOR: null
+      OTHER_OUTDOOR: null
+      PADEL: null
+      PARASPORTS_HAND_CYCLING: null
+      PARASPORTS_SLED_HOCKEY: null
+      PARASPORTS_WATER_SKIING: null
+      PARASPORTS_WHEELCHAIR: null
+      PARASPORTS_WHEELCHAIR_BASKETBALL: null
+      PARASPORTS_WHEELCHAIR_TENNIS: null
+      PICKLEBALL: null
+      PILATES: null
+      POOL_SWIMMING: null
+      RIDING: null
+      RINGETTE: null
+      ROAD_BIKING: null
+      ROAD_RUNNING: null
+      ROLLER_BLADING: null
+      ROLLER_SKIING_CLASSIC: null
+      ROLLER_SKIING_FREESTYLE: null
+      ROWING: null
+      RUGBY: null
+      RUNNING: null
+      SHOOTING_SPORT_INDOOR: null
+      SHOOTING_SPORT_OUTDOOR: null
+      SHOW_DANCING: null
+      SKATEBOARDING: null
+      SKATING: null
+      SNOWBOARDING: null
+      SNOWSHOE_TREKKING: null
+      SOCCER: null
+      SPINNING: null
+      SQUASH: null
+      STAIR_WORKOUT: null
+      STREET_DANCING: null
+      STRENGTH_TRAINING: null
+      STRETCHING: null
+      SUP: null
+      SWIMMING: null
+      TABLE_TENNIS: null
+      TAEKWONDO_MARTIAL_ARTS: null
+      TELEMARK_SKIING: null
+      TENNIS: null
+      TRACK_AND_FIELD_RUNNING: null
+      TRAIL_RUNNING: null
+      TREADMILL_RUNNING: null
+      TRIATHLON: null
+      TRIATHLON_CYCLING: null
+      TRIATHLON_RUNNING: null
+      TRIATHLON_SWIMMING: null
+      TROTTING: null
+      ULTIMATE: null
+      ULTRARUNNING_RUNNING: null
+      VERTICALSPORTS_OUTCLIMBING: null
+      VERTICALSPORTS_WALLCLIMBING: null
+      VOLLEYBALL: null
+      WALKING: null
+      WATERSPORTS_CANOEING: null
+      WATERSPORTS_KAYAKING: null
+      WATERSPORTS_KITESURFING: null
+      WATERSPORTS_SAILINGSailing: null
+      WATERSPORTS_SURFING: null
+      WATERSPORTS_WAKEBOARDING: null
+      WATERSPORTS_WATERSKI: null
+      WATERSPORTS_WINDSURFING: null
+      WATER_EXERCISE: null
+      WATER_RUNNING: null
+      XC_SKIING_CLASSIC: null
+      XC_SKIING_FREESTYLE: null
+      YOGA: null
+    sports: []
+    meghagyom: []
+    """
+
+    # App dir
+    with open(f"{APP_DIR}{sep()}config.yml", "w") as config:
+        config.write(config_template)
+    with open(f"{APP_DIR}{sep()}shoes_sports.yml", "w") as sp:
+        sp.write(shoes_sports_template)
+    with open(f"{APP_DIR}{sep()}tokens.yml", "w") as tokens:
+        tokens.write(tokens_template)
+
+
 
 class FirstRunWizard(QWizard):
     def __init__(self):
@@ -262,7 +461,6 @@ class FinalPage(QWizardPage):
         super().__init__()
         self.setTitle("Kész")
 
-        # explicit visible page title (styled)
         page_title = QLabel(self.title())
         page_title.setAlignment(Qt.AlignCenter)
         page_title.setStyleSheet("color: orange; font-size: 20pt; font-weight: 700;")
