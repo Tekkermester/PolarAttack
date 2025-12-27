@@ -10,6 +10,7 @@ from PyQt5 import QtWidgets, QtCore
 def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('./ui/icons/window_logo.png'))
+    app.setApplicationName("PolarAttack")
 
     # Show the LoadingWindow
     loading_window = QMainWindow()
