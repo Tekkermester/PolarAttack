@@ -1,8 +1,7 @@
 import time
 from datetime import date, timedelta
 
-
-from PyQt5.QtGui import QIcon, QMovie, QPixmap, QTextFrame
+from PyQt5.QtGui import QIcon,QPixmap
 
 from shoe_sport import Shoes, Sports
 from utils import *
@@ -10,10 +9,10 @@ from paths import APP_DIR, sep
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
-from PyQt5.QtCore import QUrl, Qt, QSize, QTimer, QObject,QRunnable,pyqtSlot, QPoint, QDate
-from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, QAction, \
-    QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, QDateEdit, \
-    QTableWidget, QTableWidgetItem, QHeaderView, QDialog, QDesktopWidget, QCompleter, QScrollArea
+from PyQt5.QtCore import QUrl, Qt, QSize
+from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, \
+    QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, \
+    QDialog, QDesktopWidget, QCompleter, QScrollArea
 from PyQt5.QtGui import QGuiApplication, QFont, QIcon
 import sys
 import json
