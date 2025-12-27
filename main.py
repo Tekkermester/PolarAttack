@@ -1,10 +1,10 @@
 import sys
-from utils import load_yml
+from utils import load_yml, dump_yaml
 from paths import APP_DIR, sep
 from PyQt5.QtGui import QIcon
-
+from first_use import FirstRunWizard
 from GUI import UiMainWindow, LoadingWindow
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWizard
 from PyQt5 import QtWidgets, QtCore
 
 def main():
@@ -46,6 +46,11 @@ if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
     if config['first_use']:
-        pass#start first use process
+        wizard = FirstRunWizard()
+        if wizard.exec_() == QWizard.Accepted:
+            config['first_use'] = False
+            dump_yaml(f"{APP_DIR}{sep()}config.yml", config)
+        else:
+            sys.exit(0)  # user cancelled setup
     else:
         main()
