@@ -405,7 +405,7 @@ class GetSpotrs(QThread):
             passw.clear()
             passw.send_keys(self.password + Keys.ENTER)
             try:
-                error = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
+                WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
                 self.logged_in.emit(True)
             except selenium.common.exceptions.TimeoutException:
                 self.logged_in.emit(False)
