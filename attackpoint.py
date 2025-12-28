@@ -336,7 +336,7 @@ class GetShoes(QThread):
             passw.clear()
             passw.send_keys(self.password + Keys.ENTER)
             try:
-                error = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
+                WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
                 self.logged_in.emit(True)
             except selenium.common.exceptions.TimeoutException:
                 self.logged_in.emit(False)
