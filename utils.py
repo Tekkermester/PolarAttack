@@ -7,7 +7,7 @@ import sys
 import platform
 from datetime import datetime, timedelta
 
-def load_yml(filename:str):
+def load_yml(filename:str) -> dict:
     try:
         with open(filename, encoding='utf-8') as f:
             return yaml.full_load(f)
