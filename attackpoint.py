@@ -306,6 +306,7 @@ class Uploading(QThread):
 
 class GetShoes(QThread):
     ready = pyqtSignal(list, list)
+    logged_in = pyqtSignal(bool)
     def __init__(self):
         super().__init__()
         self.driver = None
@@ -334,8 +335,14 @@ class GetShoes(QThread):
             passw = self.driver.find_element(By.NAME, 'password')
             passw.clear()
             passw.send_keys(self.password + Keys.ENTER)
+            try:
+                error = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
+                self.logged_in.emit(True)
+            except selenium.common.exceptions.TimeoutException:
+                self.logged_in.emit(False)
+                self.ready.emit([],[])
+                self.driver.quit()
             #navigate to shoes
-            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH,"//a[text()=\'shoes\']")))
             shoes_btn = self.driver.find_element(By.XPATH, "//a[text()=\'shoes\']")
             shoes_btn.click()
             WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[@href=\'/editshoes.jsp\' and text()=\'add a new pair\']")))
@@ -365,10 +372,11 @@ class GetShoes(QThread):
 
 class GetSpotrs(QThread):
     ready = pyqtSignal(list, list)
+    logged_in = pyqtSignal(bool)
     def __init__(self):
         super().__init__()
         self.driver = None
-        self.config = load_yml(f"{APP_DIR}{sep()}config.yml")
+        self.config: dict = load_yml(f"{APP_DIR}{sep()}config.yml")
         self.ap_username = self.config['ap_username']
         self.password = self.config['ap_passw']
 
@@ -396,8 +404,14 @@ class GetSpotrs(QThread):
             passw = self.driver.find_element(By.NAME, 'password')
             passw.clear()
             passw.send_keys(self.password + Keys.ENTER)
+            try:
+                error = WebDriverWait(self.driver, 5).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
+                self.logged_in.emit(True)
+            except selenium.common.exceptions.TimeoutException:
+                self.logged_in.emit(False)
+                self.ready.emit([],[])
+                self.driver.quit()
             #navigate to activity types settings
-            WebDriverWait(self.driver, 10).until(ec.presence_of_element_located((By.XPATH, "//a[text()=\'Settings\']")))
             self.driver.find_element(By.XPATH, "//a[text()='Settings']").click()
             self.driver.find_element(By.XPATH, '//a[@href=\"/editactivitytypes.jsp\"]').click()
             #bs4
@@ -413,7 +427,7 @@ class GetSpotrs(QThread):
                 td_2 = td[1].find('input')
                 data = td_2.get('value')
                 activitys_on_ap.append(data)
-            shoes_sports = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
+            shoes_sports: dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
             sports = shoes_sports["sports"]
             new = list(set(activitys_on_ap) - set(sports))
             old = list(set(sports) - set(activitys_on_ap))

@@ -5,7 +5,7 @@ from PyQt5.QtGui import QIcon,QPixmap
 
 from shoe_sport import Shoes, Sports
 from utils import *
-from paths import APP_DIR, sep
+from paths import APP_DIR,LOG_DIR, sep
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -465,18 +465,23 @@ class UiMainWindow(QWidget):
         ######### check for shoes and sprots if new
         self.get_shoes_worker = GetShoes()
         self.get_shoes_worker.ready.connect(self.get_shoes_finished)
+        self.get_shoes_worker.logged_in.connect(self.check_login)
         self.get_shoes_worker.start()
 
         self.get_sports_worker = GetSpotrs()
         self.get_sports_worker.ready.connect(self.get_sports_finished)
+        self.get_sports_worker.logged_in.connect(self.check_login)
         self.get_sports_worker.start()
 
-
-
-
-
-
         return 0
+
+
+    def check_login(self, logged_in: bool):
+        if not logged_in:
+            with open(f"{LOG_DIR}{sep()}{time.strftime("%Y.%m.%d-%H:%M:%S")}.log", "w") as log:
+                log.write('Sikertelen bejelentekezés.\nHibás Attackpoint felhasználónév vagy jelszó')
+        else:
+            pass
 
     def get_shoes_finished(self, new: list, old: list):
         if len(new) != 0:
@@ -497,7 +502,6 @@ class UiMainWindow(QWidget):
                 window.activateWindow()
         else:
             pass
-
 
     def get_sports_finished(self, new:list, old:list):
         if new:
