@@ -2,10 +2,11 @@ import sys
 import os
 from paths import APP_DIR, CACHE_DIR, LOG_DIR, sep
 from utils import load_yml, dump_yaml, APP_DIR, sep
-from PyQt5.QtWidgets import (QApplication, QWizard, QWizardPage, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox)
+from PyQt5.QtWidgets import (QApplication, QGroupBox, QWizard, QWizardPage, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox,
+    QComboBox, QWidget, QCompleter)
 from PyQt5.QtCore import Qt, QMetaObject
 from PyQt5.QtGui import QPixmap, QFont
-
+from attackpoint import GetSpotrs, GetShoes
 from user_registration import start_register_async
 
 
@@ -279,8 +280,9 @@ class FirstRunWizard(QWizard):
         self.setButtonText(QWizard.FinishButton, "Kész")
 
         self.addPage(WelcomePage())
-        self.addPage(AttackpointLogin())
-        self.addPage(PolarLogin())
+        #self.addPage(AttackpointLogin())
+        #self.addPage(PolarLogin())
+        self.addPage(SportAssignPage())
         self.addPage(FinalPage())
 
         self.resize(500, 300)
@@ -329,69 +331,128 @@ class AttackpointLogin(QWizardPage):
         super().__init__()
         self.setTitle("Bejelentkezés az Attackpointba")
 
-        # explicit visible page title (styled)
+        self._login_ok = False
+        self._login_running = False
+
         page_title = QLabel(self.title())
         page_title.setAlignment(Qt.AlignCenter)
-        page_title.setStyleSheet("color: orange; font-size: 20pt; font-weight: 700;")
-        page_title.setContentsMargins(0, 6, 0, 12)
+        page_title.setStyleSheet(
+            "color: orange; font-size: 20pt; font-weight: 700;"
+        )
 
         self.username = QLineEdit()
-
         self.password = QLineEdit()
         self.password.setEchoMode(QLineEdit.Password)
 
         self.confirm_password = QLineEdit()
         self.confirm_password.setEchoMode(QLineEdit.Password)
 
-        self.error_label = QLabel("")
-        self.error_label.setStyleSheet("color: red")
+        self.login_button = QPushButton("Bejelentkezés")
+        self.login_button.setEnabled(False)
 
-        layout = QVBoxLayout()
+        self.status_label = QLabel("")
+        self.status_label.setStyleSheet("color: red")
+
+        layout = QVBoxLayout(self)
         layout.addWidget(page_title)
         layout.addWidget(QLabel("Felhasználónév"))
         layout.addWidget(self.username)
-
         layout.addWidget(QLabel("Jelszó"))
         layout.addWidget(self.password)
-
         layout.addWidget(QLabel("Jelszó megerősítése"))
         layout.addWidget(self.confirm_password)
+        layout.addWidget(self.login_button)
+        layout.addWidget(self.status_label)
 
-        layout.addWidget(self.error_label)
-        self.setLayout(layout)
+        self.username.textChanged.connect(self._on_inputs_changed)
+        self.password.textChanged.connect(self._on_inputs_changed)
+        self.confirm_password.textChanged.connect(self._on_inputs_changed)
+        self.login_button.clicked.connect(self.start_login)
 
-        #  Re-check completeness on every change
-        self.username.textChanged.connect(self._on_changed)
-        self.password.textChanged.connect(self._on_changed)
-        self.confirm_password.textChanged.connect(self._on_changed)
-
-    def _on_changed(self):
-        self.completeChanged.emit()
-
+    #  Controls Next button
     def isComplete(self):
+        return self._login_ok
+
+    def _inputs_valid(self) -> bool:
         if not self.username.text():
-            self.error_label.setText("")
+            self.status_label.clear()
             return False
 
         if not self.password.text() or not self.confirm_password.text():
-            self.error_label.setText("")
+            self.status_label.clear()
             return False
 
         if self.password.text() != self.confirm_password.text():
-            self.error_label.setText("A két jelszó nem egyezik.")
+            self.status_label.setText("A két jelszó nem egyezik.")
             return False
 
-        self.error_label.setText("")
+        self.status_label.clear()
         return True
 
-    def validatePage(self):
-        # Store values
-        config_yaml: dict = load_yml(f"{APP_DIR}{sep()}config.yml")
+    def _on_inputs_changed(self):
+        self._login_ok = False
+
+        self.login_button.setEnabled(self._inputs_valid() and not self._login_running)
+
+        self.completeChanged.emit()
+
+    def start_login(self):
+        self._login_running = True
+        self.login_button.setEnabled(False)
+        self.status_label.setText("Bejelentkezés folyamatban...")
+        config_yaml = load_yml(f"{APP_DIR}{sep()}config.yml")
         config_yaml["ap_username"] = self.username.text()
         config_yaml["ap_passw"] = self.password.text()
         dump_yaml(f"{APP_DIR}{sep()}config.yml", config_yaml)
 
+        self.sports_worker = GetSpotrs()
+        self.sports_worker.logged_in.connect(self.on_login_finished)
+        self.sports_worker.ready.connect(self.on_sport_finished)
+        self.sports_worker.start()
+
+    def on_login_finished(self, success: bool):
+        self._login_running = False
+
+        if success:
+            self.shoes_worker = GetShoes()
+            self.shoes_worker.ready.connect(self.on_shoes_finished)
+            self.shoes_worker.start()
+
+            config_yaml = load_yml(f"{APP_DIR}{sep()}config.yml")
+            config_yaml["ap_username"] = self.username.text()
+            config_yaml["ap_passw"] = self.password.text()
+            dump_yaml(f"{APP_DIR}{sep()}config.yml", config_yaml)
+        else:
+            self._login_ok = False
+            self.status_label.setText("Hibás felhasználónév vagy jelszó")
+
+        self.completeChanged.emit()
+
+    def on_shoes_finished(self, new: list, old: list):
+        if new:
+            sp_yaml: dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
+            for shoe in new:
+                sp_yaml['shoes'].append(shoe)
+            dump_yaml(f"{APP_DIR}{sep()}shoes_sports.yml", sp_yaml)
+    def on_sport_finished(self, new: list, old: list):
+        if new:
+            sp_yaml: dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
+            for sport in new:
+                sp_yaml['sports'].append(sport)
+            dump_yaml(f"{APP_DIR}{sep()}shoes_sports.yml", sp_yaml)
+
+    def initializePage(self):
+        self._login_ok = False
+        self._login_running = False
+        self.login_button.setEnabled(False)
+        self.status_label.clear()
+        self.completeChanged.emit()
+
+    def validatePage(self):
+        # Login already completed at this point
         return True
+
+
 
 class PolarLogin(QWizardPage):
     def __init__(self):
@@ -455,6 +516,103 @@ class PolarLogin(QWizardPage):
         self.login_button.setEnabled(True)
         self.status_label.setText(f"Hiba történt: {message}")
         self.completeChanged.emit()
+
+class SportAssignPage(QWizardPage):
+    def __init__(self):
+        super().__init__()
+        self.setTitle("Sportok")
+        self.main_layout = QVBoxLayout()
+        self.setLayout(self.main_layout)
+        self.groupbox = QGroupBox()
+
+        self.group_layout = QVBoxLayout()
+
+        self.sport_yaml: dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")
+        self.data = self.sport_yaml['sports']
+
+        #title label
+        self.title_label = QLabel("Rendeld az attackpoint-on található sportjaidat\na PolarFlow-n található angol megfelelőjéhez!")
+        self.info_label = QLabel("Így például az órával felvett \"RUNNING\", automatikusan a attackpointba beírt \"futás\" -nak választja ki.")
+
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.info_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("color: orange; font-size: 15pt; font-weight: 700;")
+        self.title_label.setContentsMargins(0, 6, 0, 12)
+
+        self.main_layout.addWidget(self.title_label)
+        self.main_layout.addWidget(self.info_label)
+        self.main_layout.addWidget(self.groupbox)
+
+        for sport in self.data:
+            sport_widget = QWidget()
+            sport_layout = QHBoxLayout()
+            sport_widget.setLayout(sport_layout)
+
+            sport_label = QLabel(f"{sport}")
+            sport_label.setStyleSheet("background-color:None; font-weight: 700;color: orange")
+
+            sport_itmes = [sport for sport in self.sport_yaml['sport_dict'].keys()
+                           if self.sport_yaml['sport_dict'][sport] is  None]
+            sport_itmes.insert(0, "-")
+
+            assign_combo  = QComboBox()#for chossing to assign auto
+            assign_combo.setObjectName('assign_combo')
+            assign_combo.setEditable(True)
+            assign_combo.setStyleSheet('''#assign_combo::down-arrow {
+                                            image: url('ui/icons/down.png');
+                                            min-width: 60px;
+                                            width: 20px;
+                                            height: 20px;
+                                        }
+                                        #assign_combo::drop-down {
+                                            background-color: orange;
+                                            border: none;
+                                            width: 40px;  /* Make drop-down wider */
+                                            min-width: 40px;
+                                            border-top-right-radius: 5px;
+                                            border-bottom-right-radius: 5px;
+                                        }
+                                        ''')
+            assign_combo.lineEdit().setPlaceholderText("Kezdje el írni vagy válassz a menüből...")
+            assign_combo.addItems(sport_itmes)
+            assign_combo.setCurrentIndex(-1)
+
+            assign_combo.currentTextChanged.connect(lambda value, s=sport:self.assign_combo_changed(value, s))
+
+            completer = QCompleter(sport_itmes, assign_combo) # to autocomplate the search
+            completer.setCaseSensitivity(False)
+            completer.setFilterMode(Qt.MatchContains)
+            completer.popup().setStyleSheet(''' QComboBox QAbstractItemView, QAbstractItemView {
+                            background-color: rgb(50, 50, 50);
+                            color: white;
+                            selection-background-color: orange;
+                            selection-color: black;
+                            border: none;
+                            font-size: 14px;
+                        }
+                        QScrollBar:vertical {
+                            background: #444;
+                            width: 12px;
+                            margin: 0px 0px 0px 0px;
+                        }
+                        QScrollBar::handle:vertical {
+                            background: orange;
+                            min-height: 20px;
+                            border-radius: 6px;
+                        }''')
+            assign_combo.setCompleter(completer)
+
+            sport_layout.addWidget(sport_label)
+            sport_layout.addWidget(assign_combo)
+
+            self.group_layout.addWidget(sport_widget)
+        self.groupbox.setLayout(self.group_layout)
+
+    def assign_combo_changed(self, sport, value):
+        if sport != "-":
+            self.sport_yaml['sport_dict'][sport] = value
+            dump_yaml(f"{APP_DIR}{sep()}shoes_sports.yml", self.sport_yaml)
+
 
 class FinalPage(QWizardPage):
     def __init__(self):
