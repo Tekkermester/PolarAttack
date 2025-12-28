@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QList
 from PyQt5.QtGui import QGuiApplication, QFont, QIcon
 import sys
 import json
-from pathlib import Path
 
 from polarflow import Flow
 import webbrowser
