@@ -1232,8 +1232,6 @@ class UiMainWindow(QWidget):
             event.accept()
 
 
-
-
 class LoadingWindow(QWidget):
     def __init__(self):
         super().__init__()
