@@ -280,8 +280,8 @@ class FirstRunWizard(QWizard):
         self.setButtonText(QWizard.FinishButton, "Kész")
 
         self.addPage(WelcomePage())
-        #self.addPage(AttackpointLogin())
-        #self.addPage(PolarLogin())
+        self.addPage(AttackpointLogin())
+        self.addPage(PolarLogin())
         self.addPage(SportAssignPage())
         self.addPage(FinalPage())
 
