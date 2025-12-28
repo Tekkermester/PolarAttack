@@ -11,7 +11,7 @@ class Shoes(QThread):
         self.filename = f"{APP_DIR}{sep()}shoes_sports.yml"
     def run(self):
         try:
-            sp_yaml = load_yml(self.filename)
+            sp_yaml: dict = load_yml(self.filename)
 
             if self.no == "new":
                 for shoe in self.data:
@@ -34,7 +34,7 @@ class Sports(QThread):
         self.filename = f"{APP_DIR}{sep()}shoes_sports.yml"
     def run(self):
         try:
-            sp_yaml = load_yml(self.filename)
+            sp_yaml: dict = load_yml(self.filename)
 
             if self.no == "new":
                 for sport, polar_sport  in self.data.items():
