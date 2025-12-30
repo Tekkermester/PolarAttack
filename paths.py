@@ -9,6 +9,8 @@ APP_DIR = appdirs.user_data_dir(app_name, roaming=True, appauthor=False)
 CACHE_DIR =appdirs.user_cache_dir(app_name, appauthor=False)
 LOG_DIR = appdirs.user_log_dir(app_name, appauthor=False)
 
+SETTINGS = os.path.join(APP_DIR, "settings.json")
+
 def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
     return os.path.join(base_path, relative_path)
