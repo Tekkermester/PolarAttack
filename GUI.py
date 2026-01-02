@@ -1,11 +1,15 @@
+from ast import Pass
 import time
 from datetime import date, timedelta
+import os
+import glob
+from turtle import listen
 
 from PyQt5.QtGui import QIcon,QPixmap
 
 from shoe_sport import Shoes, Sports
 from utils import *
-from paths import APP_DIR,LOG_DIR, sep
+from paths import APP_DIR, CACHE_DIR,LOG_DIR, sep, SETTINGS
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -13,7 +17,7 @@ from PyQt5.QtCore import QUrl, Qt, QSize
 from PyQt5.QtWidgets import QApplication, QWidget, QGroupBox, QVBoxLayout, QListWidget, QLabel, QPushButton, \
     QListWidgetItem, QToolButton, QGridLayout, QComboBox,QHBoxLayout, QLineEdit, QFrame, QTextEdit, QMainWindow, QCheckBox, \
     QDialog, QDesktopWidget, QCompleter, QScrollArea
-from PyQt5.QtGui import QGuiApplication, QFont, QIcon
+from PyQt5.QtGui import QGuiApplication, QFont, QIcon, QCursor
 import sys
 import json
 
@@ -28,6 +32,12 @@ class UiMainWindow(QWidget):
         self.injury_window = None
         self.uploading_running = False
         self.upload_queue = []
+        #load files
+        with open(SETTINGS) as settings_file:
+            self.settings: dict = json.load(settings_file)
+
+        self.trainings_yml: dict = load_yml(os.path.join(APP_DIR, "trainings.yml"))
+
 
 
 
@@ -123,6 +133,68 @@ class UiMainWindow(QWidget):
         self.Settings.setIconSize(QtCore.QSize(30, 30))
         self.Settings.setObjectName("Settings")
         self.horizontalLayout.addWidget(self.Settings)
+
+        ## show training which are upoloaded?
+        # widget
+        self.uploaded_widget = QWidget()
+        self.uploaded_layout = QVBoxLayout(self.uploaded_widget)
+        self.uploaded_layout.setContentsMargins(0, 0, 0, 0)
+        self.uploaded_layout.setSpacing(6)
+        #icon
+        self.show_uploaded_icon = QToolButton()
+        self.show_uploaded_icon.setStyleSheet("background-color: transparent;")
+        #create button
+        self.show_uplaoded_btn = QCheckBox()
+
+        if self.settings['show_uploaded_trainings']:
+            self.u_icon = QIcon("./ui/icons/upolad_show.png")
+            self.show_uplaoded_btn.setToolTip("Feltöltött edzések megjelenítése")
+            self.show_uploaded_icon.setToolTip("Feltöltött edzések megjelenítése")
+            self.show_uplaoded_btn.setChecked(False)
+        else:
+            self.u_icon = QIcon("./ui/icons/upolad_hide.png")
+            self.show_uplaoded_btn.setToolTip("Feltöltött edzések elrejtése")
+            self.show_uploaded_icon.setToolTip("Feltöltött edzések elrejtése")
+
+            self.show_uplaoded_btn.setChecked(True)
+        self.show_uploaded_icon.setIcon(self.u_icon)
+        self.show_uploaded_icon.setIconSize(QSize(40, 40))
+        #uploaded button
+        # widget for the button
+        self.show_uplaoded_btn_conatiner = QWidget()
+        self.show_uplaoded_btn_conatiner_layout = QVBoxLayout(self.show_uplaoded_btn_conatiner)
+        self.show_uplaoded_btn.setStyleSheet("""
+                    QCheckBox {
+                        color: white;
+                        font-family: Arial;
+                        font-size: 18px;
+                        spacing: 5px;
+                    }
+                    QCheckBox::indicator {
+                        width: 22px;
+                        height: 22px;
+                    }
+                    QCheckBox::indicator:unchecked {
+                        border: 2px solid rgb(77, 77, 77);
+                        background-color: rgb(50, 50, 50);
+                        border-radius: 3px;
+                    }
+                    QCheckBox::indicator:checked {
+                        border: 2px solid orange;
+                        background-color: orange;
+                        border-radius: 3px;
+                    }
+                    QCheckBox::indicator:hover {
+                        border: 2px solid white;
+                    }
+                """)
+        self.show_uplaoded_btn.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
+        self.show_uplaoded_btn.stateChanged.connect(self.show_uploaded_clicked)
+
+        self.show_uplaoded_btn_conatiner_layout.addWidget(self.show_uplaoded_btn)
+        self.uploaded_layout.addWidget(self.show_uploaded_icon)
+        self.uploaded_layout.addWidget(self.show_uplaoded_btn_conatiner, alignment= Qt.AlignVCenter)
+        self.horizontalLayout.addWidget(self.uploaded_widget)
 
         #attack, polar button container
         self.top_3 = QtWidgets.QWidget(self.top)
@@ -458,7 +530,7 @@ class UiMainWindow(QWidget):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         ###################################################################################------###
-        self.load_trainings()
+        self.load_trainings(False)
 
         #--------
         ######### check for shoes and sprots if new
@@ -522,11 +594,47 @@ class UiMainWindow(QWidget):
         else:
             pass
 
-    def load_trainings(self):
-        flow_instance = Flow()
-        delete_caches(flow_instance.CACHE_DIR)
+    def show_uploaded_clicked(self, state):
+        if state == Qt.Checked:
+            self.show_uploaded_icon.setIcon(QIcon("./ui/icons/upolad_hide.png"))
+            self.show_uplaoded_btn.setToolTip("Feltöltött edzések elrejtése")
+            self.show_uploaded_icon.setToolTip("Feltöltött edzések elrejtése")
 
-        name, status_code, error = flow_instance.get_trainings()
+            self.load_trainings(True)
+        else:
+            self.show_uploaded_icon.setIcon(QIcon("./ui/icons/upolad_show.png"))
+            self.show_uplaoded_btn.setToolTip("Feltöltött edzések megjelenítése")
+            self.show_uploaded_icon.setToolTip("Feltöltött edzések megjelenítése")
+
+        val = False if state == Qt.Checked else True
+        print(val)
+        with open(SETTINGS, 'w') as settings_file:
+            self.settings['show_uploaded_trainings'] = val
+            json.dump(self.settings, settings_file)
+
+        self.load_trainings(True)
+
+
+
+    def load_trainings(self, from_file: bool):
+        if from_file:
+            name = None
+            error = None
+            status_code = 200
+            files_in_caches = glob.glob(os.path.join(CACHE_DIR,'*'))
+            sorted_files = sorted(files_in_caches, key=os.path.getmtime)
+            for file in sorted_files:
+                if file.split('.')[-1] == 'json':
+                    name = file
+                    break
+            if name is None:
+                flow_instance = Flow()
+                name, status_code, error = flow_instance.get_trainings()
+        else:
+            flow_instance = Flow()
+            delete_caches(CACHE_DIR)
+
+            name, status_code, error = flow_instance.get_trainings()
         #error
         if error is not None:
             if error == "connection_error":
@@ -534,7 +642,7 @@ class UiMainWindow(QWidget):
             elif error == "timeout_error":
                 self.choose_a_tarinng_label.setText("<h1 style=\"color: red;\">Időtúllépés :(<h1>\n<h3>Ellenőrizd az internet kapcsolatot!</h3>")
             else:
-                log_dir = QUrl.fromLocalFile(flow_instance.LOG_DIR).toString()
+                log_dir = QUrl.fromLocalFile(LOG_DIR).toString()
                 self.choose_a_tarinng_label.setText(f'<h1 style=\"color: red;\"><>Hiba történt :(</h1><a href="{log_dir}">Log</a>')
                 self.choose_a_tarinng_label.setOpenExternalLinks(True)
         #http error
@@ -542,89 +650,105 @@ class UiMainWindow(QWidget):
             self.choose_a_tarinng_label.setText(f"<h2 style=\"color: red;white-space: pre-line;\">{http_respons(status_code)}</h2>")
         #success ------ - - - - -- --- - -
         else: ###########
-            with open(f"{flow_instance.CACHE_DIR}/{name}") as j:
+            self.workout_list.clear()
+            #load settings
+            with open(SETTINGS) as settings_file:
+                settings_f: dict = json.load(settings_file)
+            uploaded_ids: list = load_yml(os.path.join(APP_DIR, "trainings.yml"))['uploaded']
+
+            with open(f"{CACHE_DIR}{sep()}{name}") as j:
                 exercise_list = json.load(j)
             for ex in exercise_list:
-                item_widget = QWidget()
-                item_layout = QVBoxLayout()
+                if (ex['id'] in uploaded_ids) and (settings_f.get('show_uploaded_trainings')):
+                    pass
 
-                #altitude data ----
-                try:
-                    for i in ex['samples']:
-                        if i['sample_type'] == 3:
-                            data = i['data']
-                            altitudes = [float(i) for i in data.split(",")]
-                    altitude = calc_altitude(altitudes)
-                except KeyError:
-                    altitude = 0
-                except Exception:
-                    altitude = 0
-
-                #time formats________--____-----__
-                if time_format(ex['start_time']) == time.strftime("%m.%d"):
-                    start_time = "Ma"
-                elif time_format(ex['start_time']) == (date.today()- timedelta(days=1)).strftime("%m.%d"):
-                    start_time = "Tegnap"
-                elif time_format(ex['start_time']) == (date.today()- timedelta(days=2)).strftime("%m.%d"):
-                    start_time = "Tegnapelőtt"
                 else:
-                    start_time = time_format(ex['start_time'])
+                    item_widget = QWidget()
+                    item_layout = QVBoxLayout()
 
-                #case if they dont have distance (pl indoor workout)
-                try:
-                    distance = calc_distance(ex['distance'])
-                except KeyError:
-                    distance = 0
-                    #if the distance 0 the altitude also should be zero
-                    altitude = 0
+                    #altitude data ----
+                    try:
+                        for i in ex['samples']:
+                            if i['sample_type'] == 3:
+                                data = i['data']
+                                altitudes = [float(i) for i in data.split(",")]
+                        altitude = calc_altitude(altitudes)
+                    except KeyError:
+                        altitude = 0
+                    except Exception:
+                        altitude = 0
+
+                    #time formats________--____-----__
+                    if time_format(ex['start_time']) == time.strftime("%m.%d"):
+                        start_time = "Ma"
+                    elif time_format(ex['start_time']) == (date.today()- timedelta(days=1)).strftime("%m.%d"):
+                        start_time = "Tegnap"
+                    elif time_format(ex['start_time']) == (date.today()- timedelta(days=2)).strftime("%m.%d"):
+                        start_time = "Tegnapelőtt"
+                    else:
+                        start_time = time_format(ex['start_time'])
+
+                    #case if they dont have distance (pl indoor workout)
+                    try:
+                        distance = calc_distance(ex['distance'])
+                    except KeyError:
+                        distance = 0
+                        #if the distance 0 the altitude also should be zero
+                        altitude = 0
 
 
 
-                #labels------
-                workout_label = QLabel(f"<p><b><span style=\"color:white;font-size: 10pt\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
-                                       f"<span style=\"font-weight: 800;color: orange; font-size: 17px\">{calc_duration(ex['duration'])}</span> <span style=\"color:white;\">-</span> "
-                                       f"<span style=\"font-size: 18px;color:white;\">{distance} km</span> "
-                                       f"<span style=\"color: #a6a49f; font-size:2em\">+{altitude}m</span>"
-                                       f"<span style=\"color:transparent;font-size:2px;\">{ex['id']}<span></p>")
-                item_layout.addWidget(workout_label)
 
-                #upload button ---
-                upload_button = QPushButton()
-                upload_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-                upload_button.setIcon(QIcon("ui/icons/upload.png"))
-                upload_button.setText('Feltöltés Attackpointra')
-                upload_button.setStyleSheet("""
-                    QPushButton {
-                        background-color: #d68f24;
-                        color: white;
-                        font-weight: bold;
-                        font-size: 14px;
-                        border: none;
-                        border-radius: 15px;
-                        padding: 8px 4px;
-                    }
 
-                    QPushButton:hover {
-                        background-color: #FF8C00;
-                    }
 
-                    QPushButton:pressed {
-                        background-color: #E67300;
-                    }
-                """)
-                upload_button.setSizePolicy(upload_button.sizePolicy().hasHeightForWidth(),False)
-                upload_button.adjustSize()
+                    #labels------
+                    workout_label = QLabel(f"<p><b><span style=\"color:white;font-size: 10pt\">{start_time}</span></b>  <span style=\"color:white;\">|</span>  "
+                                        f"<span style=\"font-weight: 800;color: orange; font-size: 17px\">{calc_duration(ex['duration'])}</span> <span style=\"color:white;\">-</span> "
+                                        f"<span style=\"font-size: 18px;color:white;\">{distance} km</span> "
+                                        f"<span style=\"color: #a6a49f; font-size:2em\">+{altitude}m</span>"
+                                        f"<span style=\"color:transparent;font-size:2px;\">{ex['id']}<span></p>")
+                    item_layout.addWidget(workout_label)
 
-                upload_button.clicked.connect(lambda _, w=[ex['id'], f"{flow_instance.CACHE_DIR}/{name}"]: self.uploader(w))
-                item_layout.addWidget(upload_button)
-                ##
-                item_widget.setLayout(item_layout)
-                #listitem widget
-                list_item = QListWidgetItem(self.workout_list)
-                list_item.setSizeHint(item_widget.sizeHint())
-                list_item.setData(QtCore.Qt.UserRole, [ex['id'], f"{flow_instance.CACHE_DIR}/{name}"])
-                self.workout_list.addItem(list_item)
-                self.workout_list.setItemWidget(list_item, item_widget)
+                    #upload button ---
+                    upload_button = QPushButton()
+                    upload_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                    if (ex['id'] in uploaded_ids):
+                        upload_button.setIcon(QIcon("ui/icons/ok.png"))
+                    else:
+                        upload_button.setIcon(QIcon("ui/icons/upload.png"))
+                    upload_button.setText('Feltöltés Attackpointra')
+                    upload_button.setStyleSheet("""
+                        QPushButton {
+                            background-color: #d68f24;
+                            color: white;
+                            font-weight: bold;
+                            font-size: 14px;
+                            border: none;
+                            border-radius: 15px;
+                            padding: 8px 4px;
+                        }
+
+                        QPushButton:hover {
+                            background-color: #FF8C00;
+                        }
+
+                        QPushButton:pressed {
+                            background-color: #E67300;
+                        }
+                    """)
+                    upload_button.setSizePolicy(upload_button.sizePolicy().hasHeightForWidth(),False)
+                    upload_button.adjustSize()
+
+                    upload_button.clicked.connect(lambda _, w=[ex['id'], f"{flow_instance.CACHE_DIR}{sep()}{name}"]: self.uploader(w))
+                    item_layout.addWidget(upload_button)
+                    ##
+                    item_widget.setLayout(item_layout)
+                    #listitem widget
+                    list_item = QListWidgetItem(self.workout_list)
+                    list_item.setSizeHint(item_widget.sizeHint())
+                    list_item.setData(QtCore.Qt.UserRole, [ex['id'], f"{flow_instance.CACHE_DIR}{sep()}{name}"])
+                    self.workout_list.addItem(list_item)
+                    self.workout_list.setItemWidget(list_item, item_widget)
 
             self.workout_list.itemClicked.connect(self.handle_workout_click)
         return 0
@@ -645,7 +769,7 @@ class UiMainWindow(QWidget):
 
     def refresh_button(self):
         self.refresh.setText("Refreshing...")
-        self.load_trainings()
+        self.load_trainings(False)
         self.refresh.setText("")
 
     def settings_btn_clicked(self):
@@ -656,365 +780,371 @@ class UiMainWindow(QWidget):
         self.menu_window = MenuWindow()
         self.menu_window.show()
 
-    def uploader(self, workout_data:str):
+    def uploader(self, workout_data:list):
         self.clearLayout(self.right_layout)
 
+        if workout_data[0] in self.trainings_yml['uploaded']:
+            uploaded_label = QLabel("<h1 style=\"color: green;\">Ez az edzés már fel van töltve! :)</h1>")
+            self.right_layout.addWidget(uploaded_label,0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        else:
 
-        #-------------------------------------------
-        workout = None
-        with open(workout_data[1]) as j:
-            exercise_list = json.load(j)
-            for i in exercise_list:
-                if i['id'] == workout_data[0]:
-                    workout = i
 
-        # altitude data ----
-        for i in workout['samples']:
-            if i['sample_type'] == 3:
-                data = i['data']
-                altitudes = [float(i) for i in data.split(",")]
 
-        months = {index + 1: month for index, month in
-                  enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])}
+            #-------------------------------------------
+            workout = None
+            with open(workout_data[1]) as j:
+                exercise_list = json.load(j)
+                for i in exercise_list:
+                    if i['id'] == workout_data[0]:
+                        workout = i
 
-        year, month, day, hour = time_split(workout['start_time'])
-        n_month = months[int(month)]
+            # altitude data ----
+            for i in workout['samples']:
+                if i['sample_type'] == 3:
+                    data = i['data']
+                    altitudes = [float(i) for i in data.split(",")]
 
-        sport = workout['detailed_sport_info'] #-----------
-        sports_dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sport_dict']
-        try:
-            if sports_dict[sport] != None:
-                activity_type = sports_dict[sport]
-            else:
+            months = {index + 1: month for index, month in
+                    enumerate(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])}
+
+            year, month, day, hour = time_split(workout['start_time'])
+            n_month = months[int(month)]
+
+            sport = workout['detailed_sport_info'] #-----------
+            sports_dict = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sport_dict']
+            try:
+                if sports_dict[sport] != None:
+                    activity_type = sports_dict[sport]
+                else:
+                    activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
+            except:
                 activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
-        except:
-            activity_type = load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports'][0]
 
 
-        intensity = "3"
-        total_time = ap_calc_duration(workout['duration'])
+            intensity = "3"
+            total_time = ap_calc_duration(workout['duration'])
 
-        try:
-            distance = calc_distance(workout['distance'])
-            climb = calc_altitude(altitudes)
-        except KeyError:
-            distance = 0
-            #if the distance 0 the altitude also should be zero
-            climb = 0
-        except Exception:
-            distance = 0
-            climb = 0
-        shoes = "Not Specified"
-        avg_hr = workout['heart_rate']['average']
-        max_hr = workout['heart_rate']['maximum']
-        resting_hr = ""
-        sleep = ""
-        weight = ""
+            try:
+                distance = calc_distance(workout['distance'])
+                climb = calc_altitude(altitudes)
+            except KeyError:
+                distance = 0
+                #if the distance 0 the altitude also should be zero
+                climb = 0
+            except Exception:
+                distance = 0
+                climb = 0
+            shoes = "Not Specified"
+            avg_hr = workout['heart_rate']['average']
+            max_hr = workout['heart_rate']['maximum']
+            resting_hr = ""
+            sleep = ""
+            weight = ""
 
-        #-------x---
-        gridLayout_Top = QGridLayout()
-        gridLayout_Top.setSpacing(10)
+            #-------x---
+            gridLayout_Top = QGridLayout()
+            gridLayout_Top.setSpacing(10)
 
-        # Row 0: Date and Session
-        labelDate = QLabel("Date")
-        self.comboBoxMonth = QComboBox()
-        self.comboBoxMonth.addItems(
-            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
-        self.comboBoxMonth.setEditable(True)
-        self.comboBoxDay = QComboBox()
-        self.comboBoxDay.addItems([f"{i:02d}" for i in range(1, 32)])
-        self.comboBoxDay.setEditable(True)
-        self.comboBoxYear = QComboBox()
-        self.comboBoxYear.addItems(["2023", "2024", "2025", "2026"])
-        self.comboBoxYear.setEditable(True)
+            # Row 0: Date and Session
+            labelDate = QLabel("Date")
+            self.comboBoxMonth = QComboBox()
+            self.comboBoxMonth.addItems(
+                ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
+            self.comboBoxMonth.setEditable(True)
+            self.comboBoxDay = QComboBox()
+            self.comboBoxDay.addItems([f"{i:02d}" for i in range(1, 32)])
+            self.comboBoxDay.setEditable(True)
+            self.comboBoxYear = QComboBox()
+            self.comboBoxYear.addItems(["2023", "2024", "2025", "2026"])
+            self.comboBoxYear.setEditable(True)
 
-        labelSession = QLabel("session:")
-        self.comboBoxSession = QComboBox()
-        self.comboBoxSession.addItems(
-            ["--", "12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM",
-             "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM", "12 PM", ])
-        self.comboBoxSession.setEditable(True)
-        date_hbox = QHBoxLayout()
-        date_hbox.setSpacing(2)
-        date_hbox.addWidget(self.comboBoxMonth)
-        date_hbox.addWidget(self.comboBoxDay)
-        date_hbox.addWidget(self.comboBoxYear)
-        date_hbox.addStretch(1)
+            labelSession = QLabel("session:")
+            self.comboBoxSession = QComboBox()
+            self.comboBoxSession.addItems(
+                ["--", "12 AM", "1 AM", "2 AM", "3 AM", "4 AM", "5 AM", "6 AM", "7 AM", "8 AM", "9 AM", "10 AM", "11 AM",
+                "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM", "8 PM", "9 PM", "10 PM", "11 PM", "12 PM", ])
+            self.comboBoxSession.setEditable(True)
+            date_hbox = QHBoxLayout()
+            date_hbox.setSpacing(2)
+            date_hbox.addWidget(self.comboBoxMonth)
+            date_hbox.addWidget(self.comboBoxDay)
+            date_hbox.addWidget(self.comboBoxYear)
+            date_hbox.addStretch(1)
 
-        gridLayout_Top.addWidget(labelDate, 0, 0, Qt.AlignTop)
-        gridLayout_Top.addLayout(date_hbox, 0, 1, 1, 1)
-        gridLayout_Top.addWidget(labelSession, 0, 5)
-        gridLayout_Top.addWidget(self.comboBoxSession, 0, 6)
+            gridLayout_Top.addWidget(labelDate, 0, 0, Qt.AlignTop)
+            gridLayout_Top.addLayout(date_hbox, 0, 1, 1, 1)
+            gridLayout_Top.addWidget(labelSession, 0, 5)
+            gridLayout_Top.addWidget(self.comboBoxSession, 0, 6)
 
-        # Row 1: Activity and Workout
-        labelActivity = QLabel("Activity / Sport")
-        self.comboBoxActivity = QComboBox()
-        self.comboBoxActivity.setEditable(True)
-        sports = [sport for sport in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports']]
+            # Row 1: Activity and Workout
+            labelActivity = QLabel("Activity / Sport")
+            self.comboBoxActivity = QComboBox()
+            self.comboBoxActivity.setEditable(True)
+            sports = [sport for sport in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['sports']]
 
-        self.comboBoxActivity.addItems(sports)
+            self.comboBoxActivity.addItems(sports)
 
-        labelWorkout = QLabel("Workout:")
-        self.comboBoxWorkout = QComboBox()
-        self.comboBoxWorkout.setEditable(True)
-        self.comboBoxWorkout.addItems(
-            ['"Training"', 'Race', 'Long', 'Intervals', 'Hills', 'Tempo', 'Warm up/down', '[None]'])
-        gridLayout_Top.addWidget(labelActivity, 1, 0)
-        gridLayout_Top.addWidget(self.comboBoxActivity, 1, 1, 1, 3)
-        gridLayout_Top.addWidget(labelWorkout, 1, 5)
-        gridLayout_Top.addWidget(self.comboBoxWorkout, 1, 6)
+            labelWorkout = QLabel("Workout:")
+            self.comboBoxWorkout = QComboBox()
+            self.comboBoxWorkout.setEditable(True)
+            self.comboBoxWorkout.addItems(
+                ['"Training"', 'Race', 'Long', 'Intervals', 'Hills', 'Tempo', 'Warm up/down', '[None]'])
+            gridLayout_Top.addWidget(labelActivity, 1, 0)
+            gridLayout_Top.addWidget(self.comboBoxActivity, 1, 1, 1, 3)
+            gridLayout_Top.addWidget(labelWorkout, 1, 5)
+            gridLayout_Top.addWidget(self.comboBoxWorkout, 1, 6)
 
-        # Row 2: Intensity
-        labelIntensity = QLabel("Intensity:")
-        self.comboBoxIntensity = QComboBox()
-        self.comboBoxIntensity.addItems(["0", "1", "2", "3", "4", "5"])
-        self.comboBoxIntensity.setEditable(True)
-        self.comboBoxIntensity.setFixedWidth(60)
-        labelIntensityHint = QLabel("(1-low, 5-high)")
-        labelIntensityHint.setStyleSheet('''font-weight:200;''')
+            # Row 2: Intensity
+            labelIntensity = QLabel("Intensity:")
+            self.comboBoxIntensity = QComboBox()
+            self.comboBoxIntensity.addItems(["0", "1", "2", "3", "4", "5"])
+            self.comboBoxIntensity.setEditable(True)
+            self.comboBoxIntensity.setFixedWidth(60)
+            labelIntensityHint = QLabel("(1-low, 5-high)")
+            labelIntensityHint.setStyleSheet('''font-weight:200;''')
 
-        intensity_hbox = QHBoxLayout()
-        intensity_hbox.setSpacing(5)
-        intensity_hbox.addWidget(self.comboBoxIntensity)
-        intensity_hbox.addWidget(labelIntensityHint)
-        intensity_hbox.addStretch(1)
+            intensity_hbox = QHBoxLayout()
+            intensity_hbox.setSpacing(5)
+            intensity_hbox.addWidget(self.comboBoxIntensity)
+            intensity_hbox.addWidget(labelIntensityHint)
+            intensity_hbox.addStretch(1)
 
-        gridLayout_Top.addWidget(labelIntensity, 2, 0)
-        gridLayout_Top.addLayout(intensity_hbox, 2, 1, 1, 3)
+            gridLayout_Top.addWidget(labelIntensity, 2, 0)
+            gridLayout_Top.addLayout(intensity_hbox, 2, 1, 1, 3)
 
-        gridLayout_Top.setColumnStretch(4, 1)
+            gridLayout_Top.setColumnStretch(4, 1)
 
-        self.right_layout.addLayout(gridLayout_Top)
+            self.right_layout.addLayout(gridLayout_Top)
 
-        # --- Activity Sub-type ---
-        subTypeHBox = QHBoxLayout()
-        labelActivitySubType = QLabel("activity sub-type (or keywords):")
-        self.lineEditActivitySubType = QLineEdit()
-        subTypeHBox.addWidget(labelActivitySubType)
-        subTypeHBox.addWidget(self.lineEditActivitySubType)
-        self.right_layout.addLayout(subTypeHBox)
+            # --- Activity Sub-type ---
+            subTypeHBox = QHBoxLayout()
+            labelActivitySubType = QLabel("activity sub-type (or keywords):")
+            self.lineEditActivitySubType = QLineEdit()
+            subTypeHBox.addWidget(labelActivitySubType)
+            subTypeHBox.addWidget(self.lineEditActivitySubType)
+            self.right_layout.addLayout(subTypeHBox)
 
-        # --- Time/Distance Grid ---
-        gridLayout_TimeDist = QGridLayout()
-        gridLayout_TimeDist.setSpacing(10)
+            # --- Time/Distance Grid ---
+            gridLayout_TimeDist = QGridLayout()
+            gridLayout_TimeDist.setSpacing(10)
 
-        # Row 0: Total Time and Hint
-        labelTotalTime = QLabel("Total time")
-        self.lineEditTotalTime = QLineEdit()
-        self.lineEditTotalTime.setFixedWidth(100)
-        # Simple hint without rich text/color
-        labelTimeHint = QLabel('HHMMSS or MMSS. e.g. "500" = 5 minutes.')
-        labelTimeHint.setStyleSheet('''font-weight:100;''')
-        labelTimeHint.setWordWrap(True)
+            # Row 0: Total Time and Hint
+            labelTotalTime = QLabel("Total time")
+            self.lineEditTotalTime = QLineEdit()
+            self.lineEditTotalTime.setFixedWidth(100)
+            # Simple hint without rich text/color
+            labelTimeHint = QLabel('HHMMSS or MMSS. e.g. "500" = 5 minutes.')
+            labelTimeHint.setStyleSheet('''font-weight:100;''')
+            labelTimeHint.setWordWrap(True)
 
-        gridLayout_TimeDist.addWidget(labelTotalTime, 0, 0)
-        gridLayout_TimeDist.addWidget(self.lineEditTotalTime, 0, 1)
-        gridLayout_TimeDist.addWidget(labelTimeHint, 0, 2, 1, 5)
+            gridLayout_TimeDist.addWidget(labelTotalTime, 0, 0)
+            gridLayout_TimeDist.addWidget(self.lineEditTotalTime, 0, 1)
+            gridLayout_TimeDist.addWidget(labelTimeHint, 0, 2, 1, 5)
 
-        # Row 1: Distance, Pace, Units, Climb
-        labelDistance = QLabel("distance:")
-        self.lineEditDistance = QLineEdit()
-        self.lineEditDistance.setFixedWidth(100)
-        labelUnits = QLabel("units:")
-        self.comboBoxUnits = QComboBox()
-        self.comboBoxUnits.addItems(["km", "mi"])
-        self.comboBoxUnits.setEditable(True)
-        labelClimb = QLabel("climb:")
-        self.lineEditClimb = QLineEdit()
-        self.lineEditClimb.setFixedWidth(80)
-        labelClimbUnit = QLabel("m")
+            # Row 1: Distance, Pace, Units, Climb
+            labelDistance = QLabel("distance:")
+            self.lineEditDistance = QLineEdit()
+            self.lineEditDistance.setFixedWidth(100)
+            labelUnits = QLabel("units:")
+            self.comboBoxUnits = QComboBox()
+            self.comboBoxUnits.addItems(["km", "mi"])
+            self.comboBoxUnits.setEditable(True)
+            labelClimb = QLabel("climb:")
+            self.lineEditClimb = QLineEdit()
+            self.lineEditClimb.setFixedWidth(80)
+            labelClimbUnit = QLabel("m")
 
-        gridLayout_TimeDist.addWidget(labelDistance, 1, 0)
-        gridLayout_TimeDist.addWidget(self.lineEditDistance, 1, 1)
-        gridLayout_TimeDist.addWidget(labelUnits, 1, 5)
-        gridLayout_TimeDist.addWidget(self.comboBoxUnits, 1, 6)
-        gridLayout_TimeDist.addWidget(labelClimb, 1, 8)
-        gridLayout_TimeDist.addWidget(self.lineEditClimb, 1, 9)
-        gridLayout_TimeDist.addWidget(labelClimbUnit, 1, 10)
+            gridLayout_TimeDist.addWidget(labelDistance, 1, 0)
+            gridLayout_TimeDist.addWidget(self.lineEditDistance, 1, 1)
+            gridLayout_TimeDist.addWidget(labelUnits, 1, 5)
+            gridLayout_TimeDist.addWidget(self.comboBoxUnits, 1, 6)
+            gridLayout_TimeDist.addWidget(labelClimb, 1, 8)
+            gridLayout_TimeDist.addWidget(self.lineEditClimb, 1, 9)
+            gridLayout_TimeDist.addWidget(labelClimbUnit, 1, 10)
 
-        gridLayout_TimeDist.setColumnStretch(10, 1)
+            gridLayout_TimeDist.setColumnStretch(10, 1)
 
-        self.right_layout.addLayout(gridLayout_TimeDist)
+            self.right_layout.addLayout(gridLayout_TimeDist)
 
-        # --- Shoes Section ---
-        horizontalLayout_Shoes = QHBoxLayout()
-        # Keep object name, but style targeting it is removed
-        labelShoes = QLabel("Shoes")
-        labelShoes.setObjectName("labelShoes")
-        self.comboBoxShoes = QComboBox()
-        self.comboBoxShoes.setEditable(True)
-        self.comboBoxShoes.setMinimumWidth(150)
-        shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['shoes']]
-        self.comboBoxShoes.addItems(["Not Specified"])
-        self.comboBoxShoes.addItems(shoes_)
+            # --- Shoes Section ---
+            horizontalLayout_Shoes = QHBoxLayout()
+            # Keep object name, but style targeting it is removed
+            labelShoes = QLabel("Shoes")
+            labelShoes.setObjectName("labelShoes")
+            self.comboBoxShoes = QComboBox()
+            self.comboBoxShoes.setEditable(True)
+            self.comboBoxShoes.setMinimumWidth(150)
+            shoes_ = [shoe for shoe in load_yml(f"{APP_DIR}{sep()}shoes_sports.yml")['shoes']]
+            self.comboBoxShoes.addItems(["Not Specified"])
+            self.comboBoxShoes.addItems(shoes_)
 
-        horizontalLayout_Shoes.addWidget(labelShoes)
-        horizontalLayout_Shoes.addWidget(self.comboBoxShoes)
-        horizontalLayout_Shoes.addStretch(1)
+            horizontalLayout_Shoes.addWidget(labelShoes)
+            horizontalLayout_Shoes.addWidget(self.comboBoxShoes)
+            horizontalLayout_Shoes.addStretch(1)
 
-        self.right_layout.addLayout(horizontalLayout_Shoes)
+            self.right_layout.addLayout(horizontalLayout_Shoes)
 
-        # --- Separator Line ---
-        lineSeparatorMetrics = QFrame()
-        lineSeparatorMetrics.setFrameShape(QFrame.HLine)
-        lineSeparatorMetrics.setFrameShadow(QFrame.Sunken)  # Default sunken look
-        self.right_layout.addWidget(lineSeparatorMetrics)
+            # --- Separator Line ---
+            lineSeparatorMetrics = QFrame()
+            lineSeparatorMetrics.setFrameShape(QFrame.HLine)
+            lineSeparatorMetrics.setFrameShadow(QFrame.Sunken)  # Default sunken look
+            self.right_layout.addWidget(lineSeparatorMetrics)
 
-        # --- Metrics Grid ---
-        gridLayout_Metrics = QGridLayout()
-        gridLayout_Metrics.setSpacing(10)
+            # --- Metrics Grid ---
+            gridLayout_Metrics = QGridLayout()
+            gridLayout_Metrics.setSpacing(10)
 
-        hr_vbox = QHBoxLayout()
-        avg_hr_hbox = QHBoxLayout()
-        avg_hr_hbox.addWidget(QLabel("Avg HR:"))
-        self.lineEditAvgHR = QLineEdit()
-        self.lineEditAvgHR.setFixedWidth(60)
-        avg_hr_hbox.addWidget(self.lineEditAvgHR)
-        avg_hr_hbox.addStretch(1)
-        hr_vbox.addLayout(avg_hr_hbox)
-        max_hr_hbox = QHBoxLayout()
-        max_hr_hbox.addWidget(QLabel("Max HR:"))
-        self.lineEditMaxHR = QLineEdit()
-        self.lineEditMaxHR.setFixedWidth(60)
-        max_hr_hbox.addWidget(self.lineEditMaxHR)
-        max_hr_hbox.addStretch(1)
-        hr_vbox.addLayout(max_hr_hbox)
+            hr_vbox = QHBoxLayout()
+            avg_hr_hbox = QHBoxLayout()
+            avg_hr_hbox.addWidget(QLabel("Avg HR:"))
+            self.lineEditAvgHR = QLineEdit()
+            self.lineEditAvgHR.setFixedWidth(60)
+            avg_hr_hbox.addWidget(self.lineEditAvgHR)
+            avg_hr_hbox.addStretch(1)
+            hr_vbox.addLayout(avg_hr_hbox)
+            max_hr_hbox = QHBoxLayout()
+            max_hr_hbox.addWidget(QLabel("Max HR:"))
+            self.lineEditMaxHR = QLineEdit()
+            self.lineEditMaxHR.setFixedWidth(60)
+            max_hr_hbox.addWidget(self.lineEditMaxHR)
+            max_hr_hbox.addStretch(1)
+            hr_vbox.addLayout(max_hr_hbox)
 
-        gridLayout_Metrics.addLayout(hr_vbox, 0, 0)
+            gridLayout_Metrics.addLayout(hr_vbox, 0, 0)
 
-        labelRestingHR = QLabel("Resting-HR:")
-        self.lineEditRestingHR = QLineEdit()
-        self.lineEditRestingHR.setFixedWidth(60)
-        labelSleep = QLabel("Sleep(hrs):")
-        self.lineEditSleep = QLineEdit()
-        self.lineEditSleep.setFixedWidth(60)
-        labelWeight = QLabel("Weight(kg):")
-        self.lineEditWeight = QLineEdit()
-        self.lineEditWeight.setFixedWidth(60)
+            labelRestingHR = QLabel("Resting-HR:")
+            self.lineEditRestingHR = QLineEdit()
+            self.lineEditRestingHR.setFixedWidth(60)
+            labelSleep = QLabel("Sleep(hrs):")
+            self.lineEditSleep = QLineEdit()
+            self.lineEditSleep.setFixedWidth(60)
+            labelWeight = QLabel("Weight(kg):")
+            self.lineEditWeight = QLineEdit()
+            self.lineEditWeight.setFixedWidth(60)
 
-        injured_label = QLabel('Injured?')
-        self.checkBoxInjured = QCheckBox()
+            injured_label = QLabel('Injured?')
+            self.checkBoxInjured = QCheckBox()
 
-        sick_label = QLabel('Sick?')
-        self.checkBoxSick = QCheckBox()
+            sick_label = QLabel('Sick?')
+            self.checkBoxSick = QCheckBox()
 
-        rest_label = QLabel('Rest day?')
-        self.checkBoxRest = QCheckBox()
-
-
-        #HBoxes for the second row of metrics for alignment
-        resting_hr_hbox = QHBoxLayout()
-        resting_hr_hbox.addWidget(labelRestingHR)
-        resting_hr_hbox.addWidget(self.lineEditRestingHR)
-        resting_hr_hbox.addStretch(1)
-
-        sleep_hbox = QHBoxLayout()
-        sleep_hbox.addWidget(labelSleep)
-        sleep_hbox.addWidget(self.lineEditSleep)
-        sleep_hbox.addStretch(1)
-
-        # injured_vbox = QVBoxLayout()
-        # injured_vbox.addWidget(injured_label)
-        # injured_vbox.addWidget(self.checkBoxInjured)
-
-        sick_vbox = QVBoxLayout()
-        sick_vbox.addWidget(sick_label)
-        sick_vbox.addWidget(self.checkBoxSick)
-
-        rest_vbox = QVBoxLayout()
-        rest_vbox.addWidget(rest_label)
-        rest_vbox.addWidget(self.checkBoxRest)
+            rest_label = QLabel('Rest day?')
+            self.checkBoxRest = QCheckBox()
 
 
-        weight_hbox = QHBoxLayout()
-        weight_hbox.addWidget(labelWeight)
-        weight_hbox.addWidget(self.lineEditWeight)
-        weight_hbox.addStretch(1)
+            #HBoxes for the second row of metrics for alignment
+            resting_hr_hbox = QHBoxLayout()
+            resting_hr_hbox.addWidget(labelRestingHR)
+            resting_hr_hbox.addWidget(self.lineEditRestingHR)
+            resting_hr_hbox.addStretch(1)
 
-        gridLayout_Metrics.addLayout(resting_hr_hbox, 1, 0)
-        gridLayout_Metrics.addLayout(sleep_hbox, 1, 1)
-        gridLayout_Metrics.addLayout(weight_hbox, 1, 2)
-        # gridLayout_Metrics.addLayout(injured_vbox, 1, 3)
-        gridLayout_Metrics.addLayout(sick_vbox,1,4)
-        gridLayout_Metrics.addLayout(rest_vbox,1,5)
+            sleep_hbox = QHBoxLayout()
+            sleep_hbox.addWidget(labelSleep)
+            sleep_hbox.addWidget(self.lineEditSleep)
+            sleep_hbox.addStretch(1)
 
-        gridLayout_Metrics.setColumnStretch(0, 1)
-        gridLayout_Metrics.setColumnStretch(1, 1)
-        gridLayout_Metrics.setColumnStretch(2, 1)
-        gridLayout_Metrics.setColumnStretch(3, 1) # Remove last stretch?
+            # injured_vbox = QVBoxLayout()
+            # injured_vbox.addWidget(injured_label)
+            # injured_vbox.addWidget(self.checkBoxInjured)
 
-        self.right_layout.addLayout(gridLayout_Metrics)
+            sick_vbox = QVBoxLayout()
+            sick_vbox.addWidget(sick_label)
+            sick_vbox.addWidget(self.checkBoxSick)
 
-        # --- Description Section ---
-        labelDescription = QLabel("Description")
-        self.textEditDescription = QTextEdit()
-        self.textEditDescription.setMinimumHeight(100)
+            rest_vbox = QVBoxLayout()
+            rest_vbox.addWidget(rest_label)
+            rest_vbox.addWidget(self.checkBoxRest)
 
-        self.right_layout.addWidget(labelDescription)
-        self.right_layout.addWidget(self.textEditDescription)
 
-        # --- Bottom Submit Button ---
-        horizontalLayout_BottomSubmit = QHBoxLayout()
-        horizontalLayout_BottomSubmit.addStretch(1)
-        self.pushButtonSubmitBottom = QPushButton("Submit")
-        self.pushButtonSubmitBottom.setStyleSheet('''
-            QPushButton {
-                background-color: rgb(214, 143, 36);
-                color: white;
-                font-weight: bold;
-                font-size: 17px;
-                border: none;
-                border-radius: 9px;
-                padding: 4px 18px;
-            }
+            weight_hbox = QHBoxLayout()
+            weight_hbox.addWidget(labelWeight)
+            weight_hbox.addWidget(self.lineEditWeight)
+            weight_hbox.addStretch(1)
 
-            QPushButton:hover {
-                background-color: #FF8C00;
-            }
+            gridLayout_Metrics.addLayout(resting_hr_hbox, 1, 0)
+            gridLayout_Metrics.addLayout(sleep_hbox, 1, 1)
+            gridLayout_Metrics.addLayout(weight_hbox, 1, 2)
+            # gridLayout_Metrics.addLayout(injured_vbox, 1, 3)
+            gridLayout_Metrics.addLayout(sick_vbox,1,4)
+            gridLayout_Metrics.addLayout(rest_vbox,1,5)
 
-            QPushButton:pressed {
-                background-color: #E67300;
-            }
-        ''')
-        self.pushButtonSubmitBottom.clicked.connect(lambda _, ex_id=workout_data[0]:self.start_upload(ex_id))
-        horizontalLayout_BottomSubmit.addWidget(self.pushButtonSubmitBottom)
+            gridLayout_Metrics.setColumnStretch(0, 1)
+            gridLayout_Metrics.setColumnStretch(1, 1)
+            gridLayout_Metrics.setColumnStretch(2, 1)
+            gridLayout_Metrics.setColumnStretch(3, 1) # Remove last stretch?
 
-        self.right_layout.addLayout(horizontalLayout_BottomSubmit)
+            self.right_layout.addLayout(gridLayout_Metrics)
 
-        # --- Set Overall Stretch ---
-        # Give the description text edit vertical stretch
-        self.right_layout.setStretchFactor(self.textEditDescription, 1)
+            # --- Description Section ---
+            labelDescription = QLabel("Description")
+            self.textEditDescription = QTextEdit()
+            self.textEditDescription.setMinimumHeight(100)
 
-        self.lineEditActivitySubType.setAlignment(Qt.AlignCenter)
-        self.lineEditTotalTime.setAlignment(Qt.AlignCenter)
-        self.lineEditDistance.setAlignment(Qt.AlignCenter)
-        self.lineEditClimb.setAlignment(Qt.AlignCenter)
-        self.lineEditAvgHR.setAlignment(Qt.AlignCenter)
-        self.lineEditMaxHR.setAlignment(Qt.AlignCenter)
-        self.lineEditRestingHR.setAlignment(Qt.AlignCenter)
-        self.lineEditSleep.setAlignment(Qt.AlignCenter)
-        self.lineEditWeight.setAlignment(Qt.AlignCenter)
+            self.right_layout.addWidget(labelDescription)
+            self.right_layout.addWidget(self.textEditDescription)
+
+            # --- Bottom Submit Button ---
+            horizontalLayout_BottomSubmit = QHBoxLayout()
+            horizontalLayout_BottomSubmit.addStretch(1)
+            self.pushButtonSubmitBottom = QPushButton("Submit")
+            self.pushButtonSubmitBottom.setStyleSheet('''
+                QPushButton {
+                    background-color: rgb(214, 143, 36);
+                    color: white;
+                    font-weight: bold;
+                    font-size: 17px;
+                    border: none;
+                    border-radius: 9px;
+                    padding: 4px 18px;
+                }
+
+                QPushButton:hover {
+                    background-color: #FF8C00;
+                }
+
+                QPushButton:pressed {
+                    background-color: #E67300;
+                }
+            ''')
+            self.pushButtonSubmitBottom.clicked.connect(lambda _, ex_id=workout_data[0]:self.start_upload(ex_id))
+            horizontalLayout_BottomSubmit.addWidget(self.pushButtonSubmitBottom)
+
+            self.right_layout.addLayout(horizontalLayout_BottomSubmit)
+
+            # --- Set Overall Stretch ---
+            # Give the description text edit vertical stretch
+            self.right_layout.setStretchFactor(self.textEditDescription, 1)
+
+            self.lineEditActivitySubType.setAlignment(Qt.AlignCenter)
+            self.lineEditTotalTime.setAlignment(Qt.AlignCenter)
+            self.lineEditDistance.setAlignment(Qt.AlignCenter)
+            self.lineEditClimb.setAlignment(Qt.AlignCenter)
+            self.lineEditAvgHR.setAlignment(Qt.AlignCenter)
+            self.lineEditMaxHR.setAlignment(Qt.AlignCenter)
+            self.lineEditRestingHR.setAlignment(Qt.AlignCenter)
+            self.lineEditSleep.setAlignment(Qt.AlignCenter)
+            self.lineEditWeight.setAlignment(Qt.AlignCenter)
 
 
 
-        # --- Set Initial Values ---
-        self.comboBoxYear.setCurrentText(year)
-        self.comboBoxMonth.setCurrentText(n_month)
-        self.comboBoxDay.setCurrentText(day)
-        self.comboBoxSession.setCurrentText(hour)
-        self.comboBoxActivity.setCurrentText(activity_type)
-        self.comboBoxIntensity.setCurrentText(intensity)
-        self.lineEditTotalTime.setText(total_time)
-        self.lineEditDistance.setText(str(distance))
-        self.lineEditClimb.setText(str(climb))
-        self.comboBoxShoes.setCurrentText(shoes)
-        self.lineEditAvgHR.setText(str(avg_hr))
-        self.lineEditMaxHR.setText(str(max_hr))
-        self.lineEditRestingHR.setText(resting_hr)
-        self.lineEditSleep.setText(sleep)
-        self.lineEditWeight.setText(weight)
+            # --- Set Initial Values ---
+            self.comboBoxYear.setCurrentText(year)
+            self.comboBoxMonth.setCurrentText(n_month)
+            self.comboBoxDay.setCurrentText(day)
+            self.comboBoxSession.setCurrentText(hour)
+            self.comboBoxActivity.setCurrentText(activity_type)
+            self.comboBoxIntensity.setCurrentText(intensity)
+            self.lineEditTotalTime.setText(total_time)
+            self.lineEditDistance.setText(str(distance))
+            self.lineEditClimb.setText(str(climb))
+            self.comboBoxShoes.setCurrentText(shoes)
+            self.lineEditAvgHR.setText(str(avg_hr))
+            self.lineEditMaxHR.setText(str(max_hr))
+            self.lineEditRestingHR.setText(resting_hr)
+            self.lineEditSleep.setText(sleep)
+            self.lineEditWeight.setText(weight)
 
-        # uploadddd
+            # uploadddd
 
     def start_upload(self, ex_id: str):
         # Create a worker instance
@@ -1032,7 +1162,7 @@ class UiMainWindow(QWidget):
         if len(self.upload_queue) == 1: # there was no item in the list before
             worker.finished.connect(self.upload_finished)
             worker.start()
-        # self.worker.show_injury_window.connect(self.show_injury_window)  # Connect signal
+        # self.worker.show_injury_window.connect(self.show_injury_window)
 
 
 
@@ -1059,9 +1189,6 @@ class UiMainWindow(QWidget):
         for i in range(self.state_layout.count()):
             item = self.state_layout.itemAt(i)
             if item.widget().objectName() == "placeholder":
-                # self.state_layout.takeAt(i)
-                # item.widget().setParent(None)
-                # item.widget().deleteLater()
                 item.widget().hide()
         #add label
         self.state_layout.addWidget(status_label)
@@ -1074,6 +1201,9 @@ class UiMainWindow(QWidget):
         self.injury_window.activateWindow()
 
     def upload_finished(self, result:list[str]): #[siker, ex_id]
+        #add exerciese's id to the uploaded list
+        self.trainings_yml['uploaded'].append(result[1])
+        dump_yaml(os.path.join(APP_DIR, "trainings.yml"), self.trainings_yml)
         #update ui
         try:
             for i in range(self.state_layout.count()):
@@ -1089,9 +1219,11 @@ class UiMainWindow(QWidget):
             self.progress_placeholder.show()
 
         #add label
-        self.choose_a_tarinng_label = QLabel("<h1 style=\"color: orange;\">Válassz ki egy új edzést ha szertnél!</h1>")
-        self.clearLayout(self.right_layout)
-        self.right_layout.addWidget(self.choose_a_tarinng_label,0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        if self.right_layout.count() == 1:
+            self.choose_a_tarinng_label = QLabel("<h1 style=\"color: orange;\">Válassz ki egy új edzést ha szertnél!</h1>")
+            self.clearLayout(self.right_layout)
+            self.right_layout.addWidget(self.choose_a_tarinng_label,0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+
 
         #clear upload_queue
         self.upload_queue.pop(0)
@@ -1101,7 +1233,38 @@ class UiMainWindow(QWidget):
             self.upload_queue[0].start()
         else:
             pass
-
+        #upload Feltöltés attackpointra button
+        try:
+            ex_id = result[1]
+            # iterate through all items in the list
+            for idx in range(self.workout_list.count()):
+                item = self.workout_list.item(idx)
+                data = item.data(QtCore.Qt.UserRole)
+                # data is expected to be like [ex_id, cache_path]
+                if data and data[0] == ex_id:
+                    row_widget = self.workout_list.itemWidget(item)
+                    if row_widget:
+                        # try to find the upload QPushButton in the row widget
+                        upload_btn = row_widget.findChild(QPushButton)
+                        if upload_btn is None:
+                            # fallback: search the layout widgets
+                            try:
+                                for j in range(row_widget.layout().count()):
+                                    w = row_widget.layout().itemAt(j).widget()
+                                    if isinstance(w, QPushButton):
+                                        upload_btn = w
+                                        break
+                            except Exception:
+                                upload_btn = None
+                        if upload_btn:
+                            # set "ok" icon, disable and update tooltip/text
+                            upload_btn.setIcon(QIcon("ui/icons/ok.png"))
+                            upload_btn.setToolTip("Feltöltve")
+                            upload_btn.setText("Feltöltve")
+                    # if you only want to update the first match, break here
+                    break
+        except Exception:
+            pass
 
 
     def retranslateUi(self, MainWindow):
