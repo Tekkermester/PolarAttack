@@ -3,7 +3,7 @@ import time
 from datetime import date, timedelta
 import os
 import glob
-from turtle import listen
+from pathlib import Path
 
 from PyQt5.QtGui import QIcon,QPixmap
 
@@ -95,6 +95,7 @@ class UiMainWindow(QWidget):
         #menu button
         self.menu = QtWidgets.QToolButton(self.top)
         self.menu.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.menu.setToolTip("Menu")
 
         self.menu.clicked.connect(self.menu_btn_clicked)
 
@@ -116,7 +117,7 @@ class UiMainWindow(QWidget):
         #settings button
         self.Settings = QPushButton(self.top)
         self.Settings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-
+        self.Settings.setToolTip("Beállítások")
         self.Settings.clicked.connect(self.settings_btn_clicked)
 
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -206,6 +207,7 @@ class UiMainWindow(QWidget):
         self.attckp.setStyleSheet(f"font-size:{str(font.pointSize())}pt;font-weight:600; background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding: 8px; color:white;")
         self.attckp.clicked.connect(lambda: webbrowser.open('https://attackpoint.org'))
         self.attckp.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.attckp.setToolTip("attackpoint.org megnyitása")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -222,6 +224,7 @@ class UiMainWindow(QWidget):
         self.polarflow.setStyleSheet(f"font-size:{str(font.pointSize())}pt;font-weight:600; background-color: rgb(77,77,77); border:2px solid; border-radius:10px; padding:8px; color:white;")
         self.polarflow.clicked.connect(lambda: webbrowser.open('https://flow.polar.com/diary'))
         self.polarflow.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.polarflow.setToolTip("PolarFLow megnyitása")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -242,6 +245,7 @@ class UiMainWindow(QWidget):
         self.logo_pic = QtWidgets.QPushButton(self.top)
         self.logo_pic.clicked.connect(lambda: webbrowser.open('https://github.com/Tekkermester/PolarAttack'))
         self.logo_pic.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.logo_pic.setToolTip("github.com/Tekkermester/PolarAttack")
 
 
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -314,6 +318,7 @@ class UiMainWindow(QWidget):
         #refresh icon --
         self.refresh = QtWidgets.QPushButton(self.top)
         self.refresh.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.refresh.setToolTip("Frissítés")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -618,14 +623,16 @@ class UiMainWindow(QWidget):
 
     def load_trainings(self, from_file: bool):
         if from_file:
+            flow_instance = Flow()
             name = None
             error = None
             status_code = 200
             files_in_caches = glob.glob(os.path.join(CACHE_DIR,'*'))
             sorted_files = sorted(files_in_caches, key=os.path.getmtime)
-            for file in sorted_files:
+            for file in reversed(sorted_files):
                 if file.split('.')[-1] == 'json':
-                    name = file
+                    name = Path(file).name
+                    print(name)
                     break
             if name is None:
                 flow_instance = Flow()
