@@ -17,6 +17,9 @@ def create_folders():
     os.makedirs(LOG_DIR, exist_ok=True)
 
     #create files------
+    settings_template = "{\"show_uploaded_trainings\": true}"
+
+    trainings_template = "uploaded: []"
     config_template = "ap_passw:\nap_username:\nfirst_use:True\nname:\n"
     tokens_template = "accestoken:\npolar_user_id:\nmember_id:\nexpires_in:"
     shoes_sports_template = """shoes: []
@@ -197,12 +200,16 @@ def create_folders():
     """
 
     # App dir
+    with open(f"{APP_DIR}{sep()}settings.json", "w") as settings:
+        settings.write(settings_template)
     with open(f"{APP_DIR}{sep()}config.yml", "w") as config:
         config.write(config_template)
     with open(f"{APP_DIR}{sep()}shoes_sports.yml", "w") as sp:
         sp.write(shoes_sports_template)
     with open(f"{APP_DIR}{sep()}tokens.yml", "w") as tokens:
         tokens.write(tokens_template)
+    with open(f"{APP_DIR}{sep()}trainings.yml", "w") as trainings:
+        trainings.write(trainings_template)
 
 
 
@@ -639,8 +646,8 @@ class FinalPage(QWizardPage):
         self.wizard().button(QWizard.BackButton).setVisible(False)
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    wizard = FirstRunWizard()
-    wizard.show()
-    sys.exit(app.exec_())
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     wizard = FirstRunWizard()
+#     wizard.show()
+#     sys.exit(app.exec_())
