@@ -1357,6 +1357,7 @@ class UiMainWindow(QWidget):
                 try:
                     import signal, os
                     from polarattack import attackpoint
+                    import subprocess
                 except Exception:
                     attackpoint = None
 
