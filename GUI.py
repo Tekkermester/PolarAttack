@@ -612,7 +612,6 @@ class UiMainWindow(QWidget):
             self.show_uploaded_icon.setToolTip("Feltöltött edzések megjelenítése")
 
         val = False if state == Qt.Checked else True
-        print(val)
         with open(SETTINGS, 'w') as settings_file:
             self.settings['show_uploaded_trainings'] = val
             json.dump(self.settings, settings_file)
