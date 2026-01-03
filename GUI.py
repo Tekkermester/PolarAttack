@@ -294,6 +294,7 @@ class UiMainWindow(QWidget):
         # self.state.setLayout(self.state_layout)
         self.state.setMinimumSize(200, 90)
         self.state.setMaximumHeight(95)
+        self.state.setStyleSheet("background-color: #323232; border: none;")
         #place holder label
         self.progress_placeholder = QLabel("Nincs folymatban feltöltés...")
         self.progress_placeholder.setObjectName('placeholder')
@@ -718,6 +719,7 @@ class UiMainWindow(QWidget):
                     #upload button ---
                     upload_button = QPushButton()
                     upload_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+                    upload_button.setToolTip("Feltöltés...")
                     if (ex['id'] in uploaded_ids):
                         upload_button.setIcon(QIcon("ui/icons/ok.png"))
                     else:
@@ -1093,6 +1095,7 @@ class UiMainWindow(QWidget):
             horizontalLayout_BottomSubmit = QHBoxLayout()
             horizontalLayout_BottomSubmit.addStretch(1)
             self.pushButtonSubmitBottom = QPushButton("Submit")
+            self.pushButtonSubmitBottom.setToolTip("Feltöltés az attackpointra")
             self.pushButtonSubmitBottom.setStyleSheet('''
                 QPushButton {
                     background-color: rgb(214, 143, 36);
@@ -1173,7 +1176,7 @@ class UiMainWindow(QWidget):
 
 
         #updating ui
-        status_label = QLabel(f"Feltöltés... {ex_id}")
+        status_label = QLabel(f"Feltöltés... ({ex_id})")
         status_label.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         status_label.setStyleSheet('''
                             background-color: #FFC34F;
@@ -2215,12 +2218,13 @@ class SettingsWindow(QWidget):
         self.setWindowTitle("Settings")
         self.setWindowIcon(QIcon("ui/icons/gear.png"))
         self.resize(300, 500)
+        self.setStyleSheet("background-color: #181818")
 
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
 
         lol_label = QLabel("<h1 style=\"color:orange;\">Pedig azt hitted, hogy vannak beállítások :(</h1>")
-        talan_label = QLabel('Talán majd lesznek...')
+        talan_label = QLabel('<p style="color: white;">Talán majd lesznek...</p>')
         self.main_layout.addWidget(lol_label)
         self.main_layout.addWidget(talan_label)
 
@@ -2230,7 +2234,7 @@ class MenuWindow(QWidget):
         self.setWindowTitle("Menu")
         self.setWindowIcon(QIcon("ui/icons/menu.png"))
         self.resize(200, 75)
-
+        self.setStyleSheet("background-color: #181818")
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
 
