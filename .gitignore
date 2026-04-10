@@ -14,3 +14,10 @@ ui/.DS_Store
 
 /todo.txt
 /testing/
+
+#build
+/build/
+/dist/
+/PolarAttack.spec
+
+/secret.py
