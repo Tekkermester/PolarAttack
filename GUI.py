@@ -9,7 +9,7 @@ from PyQt5.QtGui import QIcon,QPixmap
 
 from shoe_sport import Shoes, Sports
 from utils import *
-from paths import APP_DIR, CACHE_DIR,LOG_DIR, sep, SETTINGS
+from paths import APP_DIR, CACHE_DIR, LOG_DIR, sep, SETTINGS, resource_path
 from attackpoint import Uploading, GetShoes, GetSpotrs
 
 from PyQt5 import QtCore, QtGui, QtWidgets,Qt
@@ -108,7 +108,7 @@ class UiMainWindow(QWidget):
         self.menu.setStyleSheet("background-color:transparent;\n"
                                 "border-radius: 15px;")
         icon = QtGui.QIcon()  #----icon
-        icon.addPixmap(QtGui.QPixmap("ui/icons/menu.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(resource_path("ui/icons/menu.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.menu.setIcon(icon)
         self.menu.setIconSize(QtCore.QSize(36, 36))
         self.menu.setObjectName("menu")
@@ -129,7 +129,7 @@ class UiMainWindow(QWidget):
                                     "border-radius: 15px;")
         self.Settings.setText("")
         icon1 = QtGui.QIcon() #icon---
-        icon1.addPixmap(QtGui.QPixmap("ui/icons/gear.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon1.addPixmap(QtGui.QPixmap(resource_path("ui/icons/gear.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.Settings.setIcon(icon1)
         self.Settings.setIconSize(QtCore.QSize(30, 30))
         self.Settings.setObjectName("Settings")
@@ -148,12 +148,12 @@ class UiMainWindow(QWidget):
         self.show_uplaoded_btn = QCheckBox()
 
         if self.settings['show_uploaded_trainings']:
-            self.u_icon = QIcon("./ui/icons/upolad_show.png")
+            self.u_icon = QIcon(resource_path("ui/icons/upolad_show.png"))
             self.show_uplaoded_btn.setToolTip("Feltöltött edzések megjelenítése")
             self.show_uploaded_icon.setToolTip("Feltöltött edzések megjelenítése")
             self.show_uplaoded_btn.setChecked(False)
         else:
-            self.u_icon = QIcon("./ui/icons/upolad_hide.png")
+            self.u_icon = QIcon(resource_path("ui/icons/upolad_hide.png"))
             self.show_uplaoded_btn.setToolTip("Feltöltött edzések elrejtése")
             self.show_uploaded_icon.setToolTip("Feltöltött edzések elrejtése")
 
@@ -215,7 +215,7 @@ class UiMainWindow(QWidget):
         self.attckp.setSizePolicy(sizePolicy)
 
         icon2 = QtGui.QIcon()#icon
-        icon2.addPixmap(QtGui.QPixmap("ui/icons/attackpoint_400x400.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon2.addPixmap(QtGui.QPixmap(resource_path("ui/icons/attackpoint_400x400.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.attckp.setIcon(icon2)
         self.attckp.setObjectName("attckp")
         self.verticalLayout_2.addWidget(self.attckp)
@@ -231,7 +231,7 @@ class UiMainWindow(QWidget):
         sizePolicy.setHeightForWidth(self.polarflow.sizePolicy().hasHeightForWidth())
         self.polarflow.setSizePolicy(sizePolicy)
         icon3 = QtGui.QIcon()#icon--
-        icon3.addPixmap(QtGui.QPixmap("ui/icons/polar.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon3.addPixmap(QtGui.QPixmap(resource_path("ui/icons/polar.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.polarflow.setIcon(icon3)
         self.polarflow.setObjectName("polarflow")
         self.verticalLayout_2.addWidget(self.polarflow)
@@ -258,7 +258,7 @@ class UiMainWindow(QWidget):
                                     "border-radius: 15px;")
         self.logo_pic.setText("")
         icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap("ui/icons/logo.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon4.addPixmap(QtGui.QPixmap(resource_path("ui/icons/logo.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.logo_pic.setIcon(icon4)
         self.logo_pic.setIconSize(QtCore.QSize(70, 70))
         self.logo_pic.setObjectName("logo_pic")
@@ -329,7 +329,7 @@ class UiMainWindow(QWidget):
                                    "border-radius: 15px;")
         self.refresh.setText("")
         icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap("ui/icons/refresh.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon6.addPixmap(QtGui.QPixmap(resource_path("ui/icons/refresh.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.refresh.setIcon(icon6)
         self.refresh.setIconSize(QtCore.QSize(25, 25))
         self.refresh.setObjectName("refresh")
@@ -721,9 +721,9 @@ class UiMainWindow(QWidget):
                     upload_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
                     upload_button.setToolTip("Feltöltés...")
                     if (ex['id'] in uploaded_ids):
-                        upload_button.setIcon(QIcon("ui/icons/ok.png"))
+                        upload_button.setIcon(QIcon(resource_path("ui/icons/ok.png")))
                     else:
-                        upload_button.setIcon(QIcon("ui/icons/upload.png"))
+                        upload_button.setIcon(QIcon(resource_path("ui/icons/upload.png")))
                     upload_button.setText('Feltöltés Attackpointra')
                     upload_button.setStyleSheet("""
                         QPushButton {
@@ -1229,7 +1229,7 @@ class UiMainWindow(QWidget):
 
         #add label
         if self.right_layout.count() == 1:
-            self.choose_a_tarinng_label = QLabel("<h1 style=\"color: orange;\">Válassz ki egy új edzést ha szertnél!</h1>")
+            self.choose_a_tarinng_label = QLabel("<h1 style=\"color: orange;\">Válassz ki egy új edzést ha szeretnél!</h1>")
             self.clearLayout(self.right_layout)
             self.right_layout.addWidget(self.choose_a_tarinng_label,0, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 
@@ -1267,7 +1267,7 @@ class UiMainWindow(QWidget):
                                 upload_btn = None
                         if upload_btn:
                             # set "ok" icon, disable and update tooltip/text
-                            upload_btn.setIcon(QIcon("ui/icons/ok.png"))
+                            upload_btn.setIcon(QIcon(resource_path("ui/icons/ok.png")))
                             upload_btn.setToolTip("Feltöltve")
                             upload_btn.setText("Feltöltve")
                     # if you only want to update the first match, break here
@@ -1297,7 +1297,7 @@ class UiMainWindow(QWidget):
             msg.setText("Feltöltés még folyamatban!\nHa bezárod az edzés nem biztos, hogy fel lesz töltve!\nBiztos kilépsz?")
 
 
-            icon_path = "ui/icons/exclamation.png"
+            icon_path = resource_path("ui/icons/exclamation.png")
 
             msg.setIconPixmap(QtGui.QPixmap(icon_path).scaled(50, 50, QtCore.Qt.KeepAspectRatio))
 
@@ -1431,7 +1431,7 @@ class LoadingWindow(QWidget):
         self.image_label = QLabel()
         layout.addWidget(self.image_label)
         # Load and set the logo image
-        pixmap = QPixmap("ui/icons/logo.png")  # Path to the image
+        pixmap = QPixmap(resource_path("ui/icons/logo.png"))  # Path to the image
         scaled_pixmap = pixmap.scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)  # Scale the image
         self.image_label.setPixmap(scaled_pixmap)
 
@@ -2065,7 +2065,7 @@ class NewShoeOrSport(QDialog):
         if self.type == "shoes":
             self.layout.addLayout(self.main_layout)
             self.layout.addLayout(self.button_layout)
-            self.image = QPixmap("ui/icons/shoe.png").scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.image = QPixmap(resource_path("ui/icons/shoe.png")).scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.image_label.setPixmap(self.image)
             self.main_layout.addWidget(self.image_label)
 
@@ -2106,7 +2106,7 @@ class NewShoeOrSport(QDialog):
             self.description_label.setFont(QFont('Arial', 16,QFont.Bold))
             self.main_layout.addWidget(self.description_label)
 
-            self.image = QPixmap("ui/icons/running.png").scaled(110, 110, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.image = QPixmap(resource_path("ui/icons/running.png")).scaled(110, 110, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             self.image_label.setPixmap(self.image)
             self.title_layout.addWidget(self.image_label)
 
@@ -2217,7 +2217,7 @@ class SettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Settings")
-        self.setWindowIcon(QIcon("ui/icons/gear.png"))
+        self.setWindowIcon(QIcon(resource_path("ui/icons/gear.png")))
         self.resize(300, 500)
         self.setStyleSheet("background-color: #181818")
 
@@ -2233,7 +2233,7 @@ class MenuWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Menu")
-        self.setWindowIcon(QIcon("ui/icons/menu.png"))
+        self.setWindowIcon(QIcon(resource_path("ui/icons/menu.png")))
         self.resize(200, 75)
         self.setStyleSheet("background-color: #181818")
         self.main_layout = QVBoxLayout()

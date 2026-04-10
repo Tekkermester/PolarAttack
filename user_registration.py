@@ -2,21 +2,20 @@ import base64
 import threading
 import webbrowser
 import requests
-import json
+import os
+#####
+from secret import CLIENT_ID, CLIENT_SECRET
+
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from paths import APP_DIR, sep
+from paths import APP_DIR, resource_path, sep
 from utils import load_yml, dump_yaml, calculate_token_expire_time, generate_member_id
 
 
 # CONFIG
-with open('config.json', 'r') as config_file:
-    config = json.load(config_file)
 
-CLIENT_ID = config.get('CLIENT_ID')
-CLIENT_SECRET = config.get('CLIENT_SECRET')
 
-REDIRECT_URI = config.get('REDIRECT_URL')
+REDIRECT_URI = "http://localhost:8080/callback"
 
 AUTH_URL = (
     "https://flow.polar.com/oauth2/authorization"

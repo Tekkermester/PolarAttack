@@ -13,6 +13,10 @@ from paths import APP_DIR, chromium_path, sep, CACHE_DIR, LOG_DIR
 from bs4 import BeautifulSoup
 
 
+# Explicit imports to ensure PyInstaller includes selenium's dynamically imported chrome webdriver module
+# (some selenium internals perform dynamic imports which PyInstaller can miss; importing the full module path
+# here forces it to be collected into the frozen bundle).
+import selenium.webdriver.chrome.webdriver
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options

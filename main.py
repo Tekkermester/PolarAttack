@@ -1,15 +1,29 @@
 import sys
+import os
 from utils import load_yml, dump_yaml
-from paths import APP_DIR, sep
+from paths import APP_DIR, sep, resource_path
 from PyQt5.QtGui import QIcon
 from first_use import FirstRunWizard, create_folders
-from GUI import UiMainWindow, LoadingWindow
+# Defer importing the GUI module until after we set the working directory in main()
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWizard
 from PyQt5 import QtWidgets, QtCore
 
 def main():
+    # When running from a bundled application (PyInstaller), make the bundle's
+    # resource directory the working directory so relative paths (e.g. ui/icons/...)
+    # resolve correctly. resource_path('.') will return the bundle temp dir when frozen,
+    # or the project dir when running from source.
+    try:
+        os.chdir(resource_path('.'))
+    except Exception:
+        # If resource_path(.) is not available or chdir fails, continue without crashing.
+        pass
+    from GUI import LoadingWindow, UiMainWindow
+
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('./ui/icons/window_logo.png'))
+    # Use resource_path to load the icon so it works both when running from source
+    # and when packaged by PyInstaller.
+    app.setWindowIcon(QIcon(resource_path('ui/icons/window_logo.png')))
     app.setApplicationName("PolarAttack")
 
     # Show the LoadingWindow
